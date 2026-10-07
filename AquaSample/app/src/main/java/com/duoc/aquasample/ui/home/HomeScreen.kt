@@ -256,6 +256,7 @@ private fun HomeSecondaryCard(
 
 private enum class HomeTab { INICIO, NUEVA_MUESTRA, HISTORIAL, PERFIL }
 
+@Suppress("ViewModelConstructorInComposable")
 @Preview(showBackground = true)
 @Composable
 private fun HomeScreenPreview() {
