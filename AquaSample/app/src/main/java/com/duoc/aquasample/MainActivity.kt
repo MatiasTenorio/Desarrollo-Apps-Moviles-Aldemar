@@ -12,6 +12,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.duoc.aquasample.ui.theme.AquaSampleTheme
+import com.duoc.aquasample.ui.login.LoginScreen
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -19,12 +20,18 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             AquaSampleTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Greeting(
-                        name = "Android",
-                        modifier = Modifier.padding(innerPadding)
-                    )
-                }
+                LoginScreen(
+                    onLoginExitoso = { rol ->
+                                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
+                                    Greeting(
+                                        name = "Android",
+                                        modifier = Modifier.padding(innerPadding)
+                                    )
+                                }
+                            }
+                        }
+                    }
+                )
             }
         }
     }
