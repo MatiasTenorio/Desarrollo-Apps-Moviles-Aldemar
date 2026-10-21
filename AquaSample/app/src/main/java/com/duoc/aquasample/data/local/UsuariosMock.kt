@@ -1,4 +1,3 @@
-#!/usr/bin/env kotlin
 
 package com.duoc.aquasample.data.local
 
@@ -11,8 +10,8 @@ object UsuariosMock {
         Usuario("analista1", "1234", Rol.ANALISTA)
     )
 
-    fun validar(nombreUsuario: String, contrasena: String): Usuario? =
+    fun validar(nombre: String, passwd: String): Usuario? =
         usuarios.firstOrNull {
-            it.nombreUsuario == nombreUsuario && it.contrasena == contrasena
+            it.nombre == nombre && it.passwd == passwd
         }
 }

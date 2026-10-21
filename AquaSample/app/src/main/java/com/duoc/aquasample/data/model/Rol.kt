@@ -1,4 +1,3 @@
-#!/usr/bin/env kotlin
 
 package com.duoc.aquasample.data.model
 
