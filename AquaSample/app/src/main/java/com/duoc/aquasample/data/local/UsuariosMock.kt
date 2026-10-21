@@ -1,4 +1,3 @@
-
 package com.duoc.aquasample.data.local
 
 import com.duoc.aquasample.data.model.Rol
@@ -10,8 +9,8 @@ object UsuariosMock {
         Usuario("analista1", "1234", Rol.ANALISTA)
     )
 
-    fun validar(nombre: String, passwd: String): Usuario? =
+    fun validar(nombreUsuario: String, contrasena: String): Usuario? =
         usuarios.firstOrNull {
-            it.nombre == nombre && it.passwd == passwd
+            it.nombreUsuario == nombreUsuario && it.contrasena == contrasena
         }
 }
