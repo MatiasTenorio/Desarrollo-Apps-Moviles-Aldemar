@@ -4,7 +4,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import com.duoc.aquasample.ui.login.LoginScreen
+import com.duoc.aquasample.ui.navigation.AquaSampleApp
 import com.duoc.aquasample.ui.theme.AquaSampleTheme
 
 class MainActivity : ComponentActivity() {
@@ -13,11 +13,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             AquaSampleTheme {
-                LoginScreen(
-                    onLoginExitoso = { rol ->
-                        //
-                    }
-                )
+                AquaSampleApp()
             }
         }
     }

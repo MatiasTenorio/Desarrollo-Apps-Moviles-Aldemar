@@ -71,7 +71,6 @@ fun HomeScreen(
     onOpenMenu: () -> Unit = {} // TODO: definir qué abre el ícono de menú (¿Drawer con cerrar sesión / configuración?)
 ) {
     val uiState by viewModel.uiState.collectAsState()
-    var selectedTab by remember { mutableStateOf(HomeTab.INICIO) }
 
     Scaffold(
         topBar = {
@@ -102,46 +101,6 @@ fun HomeScreen(
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = AldemarPrincipal)
             )
-        },
-        bottomBar = {
-            NavigationBar {
-                NavigationBarItem(
-                    selected = selectedTab == HomeTab.INICIO,
-                    onClick = { selectedTab = HomeTab.INICIO },
-                    icon = { Icon(Icons.Default.Home, contentDescription = "Inicio") },
-                    label = { Text("Inicio") }
-                )
-                NavigationBarItem(
-                    selected = selectedTab == HomeTab.NUEVA_MUESTRA,
-                    onClick = {
-                        selectedTab = HomeTab.NUEVA_MUESTRA
-                        onNavigateToNewSample()
-                    },
-                    icon = { Icon(Icons.Default.CameraAlt, contentDescription = "Nueva muestra") },
-                    label = { Text("Nueva muestra") }
-                )
-                NavigationBarItem(
-                    selected = selectedTab == HomeTab.HISTORIAL,
-                    onClick = {
-                        selectedTab = HomeTab.HISTORIAL
-                        onNavigateToHistory()
-                    },
-                    icon = { Icon(Icons.Default.History, contentDescription = "Historial") },
-                    label = { Text("Historial") }
-                )
-                NavigationBarItem(
-                    selected = selectedTab == HomeTab.PERFIL,
-                    onClick = {
-                        selectedTab = HomeTab.PERFIL
-                        onNavigateToProfile()
-                    },
-                    icon = { Icon(Icons.Default.Person, contentDescription = "Perfil") },
-                    label = { Text("Perfil") }
-                )
-                // TODO (pendiente de decisión de equipo): si se confirma una 4ta opción
-                // exclusiva para el rol Analista, agregar aquí un NavigationBarItem
-                // condicionado a uiState.userRole == Rol.ANALISTA.
-            }
         }
     ) { paddingValues ->
         Column(
@@ -253,8 +212,6 @@ private fun HomeSecondaryCard(
         }
     }
 }
-
-private enum class HomeTab { INICIO, NUEVA_MUESTRA, HISTORIAL, PERFIL }
 
 @Suppress("ViewModelConstructorInComposable")
 @Preview(showBackground = true)
