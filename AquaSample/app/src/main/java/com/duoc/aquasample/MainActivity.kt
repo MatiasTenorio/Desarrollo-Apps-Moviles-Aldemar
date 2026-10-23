@@ -6,6 +6,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import com.duoc.aquasample.ui.login.LoginScreen
 import com.duoc.aquasample.ui.navigation.AppNavigation
+import com.duoc.aquasample.ui.navigation.AquaSampleApp
 import com.duoc.aquasample.ui.theme.AquaSampleTheme
 
 class MainActivity : ComponentActivity() {
@@ -15,6 +16,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             AquaSampleTheme {
                 AppNavigation()
+                AquaSampleApp()
             }
         }
     }
