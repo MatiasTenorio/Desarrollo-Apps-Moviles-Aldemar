@@ -49,5 +49,5 @@ class LoginViewModel : ViewModel() {
     // Se llama después de navegar, para no repetir la navegación al rotar la pantalla
     fun loginConsumido() =
         _uiState.update { it.copy(rolAutenticado = null) }
-}#!/usr/bin/env kotlin
+}
 

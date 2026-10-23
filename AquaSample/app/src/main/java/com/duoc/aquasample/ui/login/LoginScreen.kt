@@ -141,7 +141,7 @@ private fun LoginContent(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Image(
-                painter = painterResource(id = R.drawable.logo_app),
+                painter = painterResource(id = R.drawable.logo),
                 contentDescription = "Logo Aldemar",
                 contentScale = ContentScale.Crop,
                 modifier = Modifier.size(110.dp).clip(CircleShape)
