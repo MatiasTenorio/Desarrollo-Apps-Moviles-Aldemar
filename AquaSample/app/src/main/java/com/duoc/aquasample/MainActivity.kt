@@ -15,7 +15,7 @@ class MainActivity : ComponentActivity() {
             AquaSampleTheme {
                 LoginScreen(
                     onLoginExitoso = { rol ->
-                        // TODO: navegar a "Inicio de aplicación" cuando exista NavGraph
+                        //
                     }
                 )
             }
