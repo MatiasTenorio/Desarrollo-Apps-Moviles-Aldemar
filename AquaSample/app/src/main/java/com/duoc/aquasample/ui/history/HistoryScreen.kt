@@ -48,8 +48,6 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.duoc.aquasample.R
-import com.duoc.aquasample.ui.components.AppBottomBar
-import com.duoc.aquasample.ui.components.Destino
 
 // Puedes mover estos colores a ui/theme/Color.kt
 private val AzulPrimario = Color(0xFF1E88E5)
@@ -63,7 +61,6 @@ fun HistoryScreen(
     onBack: () -> Unit = {},
     onFiltroClick: () -> Unit = {},
     onMuestraClick: (String) -> Unit = {},
-    onDestinoClick: (Destino) -> Unit = {},
     viewModel: HistoryViewModel = viewModel()
 ) {
     val muestras by viewModel.muestras.collectAsStateWithLifecycle()
@@ -75,8 +72,7 @@ fun HistoryScreen(
         onBusquedaChange = viewModel::onBusquedaChange,
         onBack = onBack,
         onFiltroClick = onFiltroClick,
-        onMuestraClick = onMuestraClick,
-        onDestinoClick = onDestinoClick
+        onMuestraClick = onMuestraClick
     )
 }
 
@@ -88,8 +84,7 @@ private fun HistoryContent(
     onBusquedaChange: (String) -> Unit,
     onBack: () -> Unit,
     onFiltroClick: () -> Unit,
-    onMuestraClick: (String) -> Unit,
-    onDestinoClick: (Destino) -> Unit
+    onMuestraClick: (String) -> Unit
 ) {
     Scaffold(
         containerColor = FondoPantalla,
@@ -114,12 +109,6 @@ private fun HistoryContent(
                     navigationIconContentColor = Color.White,
                     actionIconContentColor = Color.White
                 )
-            )
-        },
-        bottomBar = {
-            AppBottomBar(
-                seleccionado = Destino.HISTORIAL,
-                onDestinoClick = onDestinoClick
             )
         }
     ) { innerPadding ->
@@ -249,7 +238,6 @@ private fun HistoryPreview() {
         onBusquedaChange = {},
         onBack = {},
         onFiltroClick = {},
-        onMuestraClick = {},
-        onDestinoClick = {}
+        onMuestraClick = {}
     )
 }
