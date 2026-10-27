@@ -15,6 +15,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
@@ -28,9 +29,13 @@ private val AzulPrimario = Color(0xFF1E88E5)
 fun SampleFormScreen(
     onBack: () -> Unit,
     onGuardado: () -> Unit,
+    foto: ImageBitmap? = null,
+    lineaInicial: Int = 1,
     viewModel: SampleFormViewModel = viewModel()
 ) {
     val state by viewModel.uiState.collectAsState()
+
+    LaunchedEffect(lineaInicial) { viewModel.inicializar(lineaInicial) }
 
     Scaffold(
         topBar = {
@@ -71,7 +76,7 @@ fun SampleFormScreen(
                     Text("Cancelar", color = AzulPrimario, fontWeight = FontWeight.SemiBold)
                 }
                 Button(
-                    onClick = { if (viewModel.validarYGuardar()) onGuardado() },
+                    onClick = { if (viewModel.validarYGuardar(foto)) onGuardado() },
                     modifier = Modifier
                         .weight(1f)
                         .height(52.dp),

@@ -73,4 +73,9 @@ class NewSampleViewModel : ViewModel() {
     fun onQuitarFoto() {
         _uiState.update { it.copy(foto = null) }
     }
+
+    /** Deja el paso 1 en blanco; se llama después de guardar una muestra. */
+    fun reiniciar() {
+        _uiState.value = NewSampleUiState()
+    }
 }

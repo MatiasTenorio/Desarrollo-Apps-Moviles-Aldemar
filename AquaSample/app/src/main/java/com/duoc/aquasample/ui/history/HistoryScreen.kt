@@ -48,6 +48,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.duoc.aquasample.R
+import com.duoc.aquasample.data.model.Muestra
 
 // Puedes mover estos colores a ui/theme/Color.kt
 private val AzulPrimario = Color(0xFF1E88E5)
@@ -125,7 +126,11 @@ private fun HistoryContent(
 
             if (muestras.isEmpty()) {
                 Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text("No se encontraron muestras", color = TextoSecundario)
+                    Text(
+                        text = if (busqueda.isBlank()) "Aún no has guardado muestras"
+                        else "No se encontraron muestras",
+                        color = TextoSecundario
+                    )
                 }
             } else {
                 LazyColumn(
@@ -187,14 +192,25 @@ private fun MuestraCard(
                 .padding(12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Image(
-                painter = painterResource(R.drawable.chorito),
-                contentDescription = "Foto de la muestra ${muestra.id}",
-                contentScale = ContentScale.Crop,
-                modifier = Modifier
-                    .size(76.dp)
-                    .clip(RoundedCornerShape(14.dp))
-            )
+            val fotoMuestra = muestra.foto
+            val modificadorFoto = Modifier
+                .size(76.dp)
+                .clip(RoundedCornerShape(14.dp))
+            if (fotoMuestra != null) {
+                Image(
+                    bitmap = fotoMuestra,
+                    contentDescription = "Foto de la muestra ${muestra.id}",
+                    contentScale = ContentScale.Crop,
+                    modifier = modificadorFoto
+                )
+            } else {
+                Image(
+                    painter = painterResource(R.drawable.chorito),
+                    contentDescription = "Foto de la muestra ${muestra.id}",
+                    contentScale = ContentScale.Crop,
+                    modifier = modificadorFoto
+                )
+            }
 
             Spacer(Modifier.width(14.dp))
 
@@ -231,8 +247,8 @@ private fun MuestraCard(
 private fun HistoryPreview() {
     HistoryContent(
         muestras = listOf(
-            Muestra("#0007", "09/09/2026", 2, 39),
-            Muestra("#0006", "08/09/2026", 1, 43)
+            Muestra("#0002", "09/09/2026", 2, List(39) { 5.4 }),
+            Muestra("#0001", "08/09/2026", 1, List(43) { 5.1 })
         ),
         busqueda = "",
         onBusquedaChange = {},
