@@ -47,6 +47,9 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.duoc.aquasample.data.model.Rol
+import com.duoc.aquasample.data.model.Usuario
+import com.duoc.aquasample.data.repository.SesionRepository
 import com.duoc.aquasample.ui.theme.AldemarPrincipal
 import com.duoc.aquasample.ui.theme.AldemarSecundario
 import com.duoc.aquasample.ui.theme.AldemarTexto
@@ -64,7 +67,7 @@ import com.duoc.aquasample.ui.theme.AldemarTexto
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
-    viewModel: HomeViewModel = viewModel(),
+    viewModel: HomeViewModel = viewModel(factory = HomeViewModel.Factory),
     onNavigateToNewSample: () -> Unit = {},
     onNavigateToHistory: () -> Unit = {},
     onNavigateToProfile: () -> Unit = {},
@@ -90,15 +93,12 @@ fun HomeScreen(
                         // Image(painterResource(R.drawable.logo_aldemar), contentDescription = null, modifier = Modifier.size(28.dp))
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
                             Text("Aldemar", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 18.sp)
-                            Text("Muestras", color = Color.White, fontSize = 11.sp)
+                            Text("AquaSample", color = Color.White, fontSize = 11.sp)
                         }
                     }
                 },
-                actions = {
-                    IconButton(onClick = onNavigateToProfile) {
-                        Icon(Icons.Default.Person, contentDescription = "Perfil", tint = Color.White)
-                    }
-                },
+                // Sin ícono de Perfil arriba (decisión del equipo): ya está en la
+                // NavigationBar y en la tarjeta de abajo; un tercer acceso sobraba.
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = AldemarPrincipal)
             )
         }
@@ -217,5 +217,6 @@ private fun HomeSecondaryCard(
 @Preview(showBackground = true)
 @Composable
 private fun HomeScreenPreview() {
-    HomeScreen(viewModel = HomeViewModel(userName = "Matías"))
+    val sesion = SesionRepository().apply { iniciar(Usuario("Matías", "", Rol.OPERADOR)) }
+    HomeScreen(viewModel = HomeViewModel(sesion))
 }

@@ -1,8 +1,13 @@
 package com.duoc.aquasample.ui.login
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.viewmodel.initializer
+import androidx.lifecycle.viewmodel.viewModelFactory
 import com.duoc.aquasample.data.local.UsuariosMock
 import com.duoc.aquasample.data.model.Rol
+import com.duoc.aquasample.data.repository.SesionRepository
+import com.duoc.aquasample.ui.appContainer
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -16,7 +21,9 @@ data class LoginUiState(
     val rolAutenticado: Rol? = null   // si no es null, el login fue exitoso
 )
 
-class LoginViewModel : ViewModel() {
+class LoginViewModel(
+    private val sesion: SesionRepository
+) : ViewModel() {
 
     private val _uiState = MutableStateFlow(LoginUiState())
     val uiState: StateFlow<LoginUiState> = _uiState.asStateFlow()
@@ -42,6 +49,7 @@ class LoginViewModel : ViewModel() {
         if (usuario == null) {
             _uiState.update { it.copy(error = "Usuario o contraseña incorrectos") }
         } else {
+            sesion.iniciar(usuario)
             _uiState.update { it.copy(error = null, rolAutenticado = usuario.rol) }
         }
     }
@@ -49,5 +57,11 @@ class LoginViewModel : ViewModel() {
     // Se llama después de navegar, para no repetir la navegación al rotar la pantalla
     fun loginConsumido() =
         _uiState.update { it.copy(rolAutenticado = null) }
+
+    companion object {
+        val Factory: ViewModelProvider.Factory = viewModelFactory {
+            initializer { LoginViewModel(appContainer().sesionRepository) }
+        }
+    }
 }
 

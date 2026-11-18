@@ -20,8 +20,12 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.filled.CloudDone
+import androidx.compose.material.icons.filled.CloudUpload
 import androidx.compose.material.icons.filled.FilterAlt
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.Badge
+import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
@@ -35,6 +39,9 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -47,8 +54,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import coil3.compose.AsyncImage
 import com.duoc.aquasample.R
+<<<<<<< HEAD
 import com.duoc.aquasample.data.model.Muestra
+=======
+import java.io.File
+>>>>>>> 8a704e0 (Feat (Develop: Backend y cambios Parcial 3))
 
 // Puedes mover estos colores a ui/theme/Color.kt
 private val AzulPrimario = Color(0xFF1E88E5)
@@ -60,32 +72,67 @@ private val TextoSecundario = Color(0xFF6B7A8C)
 @Composable
 fun HistoryScreen(
     onBack: () -> Unit = {},
+<<<<<<< HEAD
     onFiltroClick: () -> Unit = {},
     onMuestraClick: (String) -> Unit = {},
     viewModel: HistoryViewModel = viewModel()
+=======
+    onMuestraClick: (Long) -> Unit = {},
+    viewModel: HistoryViewModel = viewModel(factory = HistoryViewModel.Factory)
+>>>>>>> 8a704e0 (Feat (Develop: Backend y cambios Parcial 3))
 ) {
     val muestras by viewModel.muestras.collectAsStateWithLifecycle()
     val busqueda by viewModel.busqueda.collectAsStateWithLifecycle()
+    val filtro by viewModel.filtro.collectAsStateWithLifecycle()
+    val resumen by viewModel.resumen.collectAsStateWithLifecycle()
+    var mostrarFiltros by rememberSaveable { mutableStateOf(false) }
 
     HistoryContent(
         muestras = muestras,
         busqueda = busqueda,
+        filtro = filtro,
+        resumen = resumen,
         onBusquedaChange = viewModel::onBusquedaChange,
+        onFiltroChange = viewModel::onFiltroChange,
+        onLimpiarFiltros = viewModel::onLimpiarFiltros,
         onBack = onBack,
+<<<<<<< HEAD
         onFiltroClick = onFiltroClick,
+=======
+        onFiltroClick = { mostrarFiltros = true },
+>>>>>>> 8a704e0 (Feat (Develop: Backend y cambios Parcial 3))
         onMuestraClick = onMuestraClick
     )
+
+    if (mostrarFiltros) {
+        FiltrosSheet(
+            filtroActual = filtro,
+            onAplicar = {
+                viewModel.onFiltroChange(it)
+                mostrarFiltros = false
+            },
+            onCerrar = { mostrarFiltros = false }
+        )
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun HistoryContent(
-    muestras: List<Muestra>,
+    muestras: List<MuestraItem>,
     busqueda: String,
+    filtro: FiltroHistorial,
+    resumen: ResumenHistorial,
     onBusquedaChange: (String) -> Unit,
+    onFiltroChange: (FiltroHistorial) -> Unit,
+    onLimpiarFiltros: () -> Unit,
     onBack: () -> Unit,
     onFiltroClick: () -> Unit,
+<<<<<<< HEAD
     onMuestraClick: (String) -> Unit
+=======
+    onMuestraClick: (Long) -> Unit
+>>>>>>> 8a704e0 (Feat (Develop: Backend y cambios Parcial 3))
 ) {
     Scaffold(
         containerColor = FondoPantalla,
@@ -101,7 +148,15 @@ private fun HistoryContent(
                 },
                 actions = {
                     IconButton(onClick = onFiltroClick) {
-                        Icon(Icons.Filled.FilterAlt, contentDescription = "Filtrar")
+                        BadgedBox(
+                            badge = {
+                                if (filtro.cantidadActivos > 0) {
+                                    Badge { Text(filtro.cantidadActivos.toString()) }
+                                }
+                            }
+                        ) {
+                            Icon(Icons.Filled.FilterAlt, contentDescription = "Filtrar")
+                        }
                     }
                 },
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
@@ -111,7 +166,11 @@ private fun HistoryContent(
                     actionIconContentColor = Color.White
                 )
             )
+<<<<<<< HEAD
         }
+=======
+        },
+>>>>>>> 8a704e0 (Feat (Develop: Backend y cambios Parcial 3))
     ) { innerPadding ->
         Column(
             modifier = Modifier
@@ -124,11 +183,32 @@ private fun HistoryContent(
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)
             )
 
+            if (filtro.cantidadActivos > 0) {
+                FiltrosActivos(
+                    filtro = filtro,
+                    onCambiar = onFiltroChange,
+                    onLimpiar = onLimpiarFiltros,
+                    modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 8.dp)
+                )
+            }
+
+            if (muestras.isNotEmpty()) {
+                ResumenCard(
+                    resumen = resumen,
+                    modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 12.dp)
+                )
+            }
+
             if (muestras.isEmpty()) {
                 Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     Text(
+<<<<<<< HEAD
                         text = if (busqueda.isBlank()) "Aún no has guardado muestras"
                         else "No se encontraron muestras",
+=======
+                        if (busqueda.isBlank() && filtro.cantidadActivos == 0) "Aún no hay muestras registradas"
+                        else "No hay muestras con esos filtros",
+>>>>>>> 8a704e0 (Feat (Develop: Backend y cambios Parcial 3))
                         color = TextoSecundario
                     )
                 }
@@ -140,7 +220,7 @@ private fun HistoryContent(
                     items(muestras, key = { it.id }) { muestra ->
                         MuestraCard(
                             muestra = muestra,
-                            onClick = { onMuestraClick(muestra.id) }
+                            onClick = { onMuestraClick(muestra.idInterno) }
                         )
                     }
                 }
@@ -174,7 +254,7 @@ private fun BuscadorMuestras(
 
 @Composable
 private fun MuestraCard(
-    muestra: Muestra,
+    muestra: MuestraItem,
     onClick: () -> Unit
 ) {
     Card(
@@ -192,6 +272,7 @@ private fun MuestraCard(
                 .padding(12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
+<<<<<<< HEAD
             val fotoMuestra = muestra.foto
             val modificadorFoto = Modifier
                 .size(76.dp)
@@ -211,6 +292,20 @@ private fun MuestraCard(
                     modifier = modificadorFoto
                 )
             }
+=======
+            // Foto real de la muestra; si no hay o falla, la imagen genérica de chorito.
+            AsyncImage(
+                model = muestra.fotoPath?.let(::File),
+                placeholder = painterResource(R.drawable.chorito),
+                error = painterResource(R.drawable.chorito),
+                fallback = painterResource(R.drawable.chorito),
+                contentDescription = "Foto de la muestra ${muestra.id}",
+                contentScale = ContentScale.Crop,
+                modifier = Modifier
+                    .size(76.dp)
+                    .clip(RoundedCornerShape(14.dp))
+            )
+>>>>>>> 8a704e0 (Feat (Develop: Backend y cambios Parcial 3))
 
             Spacer(Modifier.width(14.dp))
 
@@ -234,6 +329,13 @@ private fun MuestraCard(
             }
 
             Icon(
+                imageVector = if (muestra.sincronizada) Icons.Filled.CloudDone else Icons.Filled.CloudUpload,
+                contentDescription = if (muestra.sincronizada) "Sincronizada" else "Pendiente de sincronizar",
+                tint = if (muestra.sincronizada) Color(0xFF2DCC4F) else TextoSecundario,
+                modifier = Modifier.size(20.dp)
+            )
+            Spacer(Modifier.width(4.dp))
+            Icon(
                 imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
                 contentDescription = "Ver detalle",
                 tint = TextoSecundario
@@ -247,11 +349,20 @@ private fun MuestraCard(
 private fun HistoryPreview() {
     HistoryContent(
         muestras = listOf(
+<<<<<<< HEAD
             Muestra("#0002", "09/09/2026", 2, List(39) { 5.4 }),
             Muestra("#0001", "08/09/2026", 1, List(43) { 5.1 })
+=======
+            MuestraItem(7, "#0007", "09/09/2026", 2, 39),
+            MuestraItem(6, "#0006", "08/09/2026", 1, 43)
+>>>>>>> 8a704e0 (Feat (Develop: Backend y cambios Parcial 3))
         ),
         busqueda = "",
+        filtro = FiltroHistorial(linea = 2),
+        resumen = ResumenHistorial(muestras = 2, choritosTotales = 82, promedioChoritosPorMuestra = 41.0, tamanoPromedioCm = 5.4),
         onBusquedaChange = {},
+        onFiltroChange = {},
+        onLimpiarFiltros = {},
         onBack = {},
         onFiltroClick = {},
         onMuestraClick = {}

@@ -3,7 +3,6 @@ package com.duoc.aquasample.ui.newSample
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -25,18 +24,13 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.ExposedDropdownMenuBox
-import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TextField
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -47,14 +41,22 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.ImageBitmap
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
+import coil3.compose.AsyncImage
 import com.duoc.aquasample.ui.components.SampleWizardStepper
-import com.duoc.aquasample.ui.newSample.NewSampleViewModel
+import com.duoc.aquasample.ui.components.SelectorDesplegable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.ui.text.input.KeyboardType
+import java.io.File
 import com.duoc.aquasample.ui.theme.AldemarPrincipal
 
 /**
@@ -65,27 +67,19 @@ import com.duoc.aquasample.ui.theme.AldemarPrincipal
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NewSampleLineaFotosScreen(
-    viewModel: NewSampleViewModel = viewModel(),
+    viewModel: NewSampleViewModel = viewModel(factory = NewSampleViewModel.Factory),
     onBack: () -> Unit = {},
-    onSiguiente: () -> Unit = {}
+    onSiguiente: () -> Unit = {},
+    onAbrirCamara: () -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsState()
-    val context = LocalContext.current
     var mostrarSelectorFoto by remember { mutableStateOf(false) }
-
-    val cameraLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.TakePicturePreview()
-    ) { bitmap ->
-        if (bitmap != null) {
-            viewModel.onFotoCapturada(bitmap)
-        }
-    }
 
     val galleryLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickVisualMedia()
     ) { uri ->
         if (uri != null) {
-            viewModel.onFotoSeleccionadaDesdeGaleria(uri, context)
+            viewModel.onFotoSeleccionadaDesdeGaleria(uri)
         }
     }
 
@@ -105,50 +99,54 @@ fun NewSampleLineaFotosScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
+                .verticalScroll(rememberScrollState())
                 .padding(horizontal = 20.dp, vertical = 16.dp)
         ) {
             SampleWizardStepper(
                 currentStep = 1,
-                stepLabels = listOf("Línea y fotos", "Conteo y revisión", "Guardar")
+                stepLabels = PASOS_ASISTENTE
             )
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            Text("1. Selecciona la línea", fontWeight = FontWeight.Bold)
+            Text("1. Identifica la línea", fontWeight = FontWeight.Bold)
             Spacer(modifier = Modifier.height(8.dp))
 
-            var expanded by remember { mutableStateOf(false) }
-            ExposedDropdownMenuBox(
-                expanded = expanded,
-                onExpandedChange = { expanded = it }
-            ) {
-                TextField(
-                    value = uiState.lineaSeleccionada,
-                    onValueChange = {},
-                    readOnly = true,
-                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-                    // Si tu versión de Material3 pide un argumento en menuAnchor(),
-                    // usa: .menuAnchor(MenuAnchorType.PrimaryNotEditable, enabled = true)
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .menuAnchor()
+            SelectorDesplegable(
+                etiqueta = "Centro de cultivo",
+                opciones = uiState.centros,
+                seleccionada = uiState.centro,
+                onSeleccion = viewModel::onCentroSeleccionado
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                SelectorDesplegable(
+                    etiqueta = "Tren",
+                    opciones = uiState.trenes,
+                    seleccionada = uiState.tren,
+                    onSeleccion = viewModel::onTrenSeleccionado,
+                    modifier = Modifier.weight(1f)
                 )
-                DropdownMenu(
-                    expanded = expanded,
-                    onDismissRequest = { expanded = false },
-                    modifier = Modifier.exposedDropdownSize()
-                ) {
-                    uiState.lineasDisponibles.forEach { linea ->
-                        DropdownMenuItem(
-                            text = { Text(linea) },
-                            onClick = {
-                                viewModel.onLineaSeleccionada(linea)
-                                expanded = false
-                            }
-                        )
-                    }
-                }
+                SelectorDesplegable(
+                    etiqueta = "Línea",
+                    opciones = uiState.lineas,
+                    seleccionada = uiState.linea,
+                    onSeleccion = viewModel::onLineaSeleccionada,
+                    textoDe = { "Línea $it" },
+                    modifier = Modifier.weight(1f)
+                )
             }
+            Spacer(modifier = Modifier.height(8.dp))
+            OutlinedTextField(
+                value = uiState.longitudTramoTexto,
+                onValueChange = viewModel::onLongitudChange,
+                label = { Text("Longitud del tramo (m)") },
+                placeholder = { Text("Ej: 1,5") },
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                shape = RoundedCornerShape(12.dp),
+                modifier = Modifier.fillMaxWidth()
+            )
 
             Spacer(modifier = Modifier.height(24.dp))
 
@@ -156,12 +154,16 @@ fun NewSampleLineaFotosScreen(
             Spacer(modifier = Modifier.height(8.dp))
 
             FotoMuestraBox(
-                foto = uiState.foto,
+                fotoPath = uiState.fotoPath,
                 cargando = uiState.cargandoFoto,
                 onClick = { mostrarSelectorFoto = true }
             )
+            uiState.errorFoto?.let {
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
+            }
 
-            Spacer(modifier = Modifier.weight(1f))
+            Spacer(modifier = Modifier.height(24.dp))
 
             Button(
                 onClick = onSiguiente,
@@ -181,7 +183,7 @@ fun NewSampleLineaFotosScreen(
             onDismiss = { mostrarSelectorFoto = false },
             onTomarFoto = {
                 mostrarSelectorFoto = false
-                cameraLauncher.launch(null)
+                onAbrirCamara()
             },
             onElegirDeGaleria = {
                 mostrarSelectorFoto = false
@@ -195,7 +197,7 @@ fun NewSampleLineaFotosScreen(
 
 @Composable
 private fun FotoMuestraBox(
-    foto: ImageBitmap?,
+    fotoPath: String?,
     cargando: Boolean,
     onClick: () -> Unit
 ) {
@@ -210,10 +212,14 @@ private fun FotoMuestraBox(
         when {
             cargando -> CircularProgressIndicator()
 
-            foto != null -> Image(
-                bitmap = foto,
+            // Coil lee el JPG desde el archivo y lo escala al tamaño del recuadro.
+            fotoPath != null -> AsyncImage(
+                model = File(fotoPath),
                 contentDescription = "Foto de la muestra",
-                modifier = Modifier.fillMaxSize()
+                contentScale = ContentScale.Crop,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .clip(RoundedCornerShape(12.dp))
             )
 
             else -> Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -264,8 +270,5 @@ private fun SelectorFotoDialog(
     )
 }
 
-@Preview(showBackground = true)
-@Composable
-private fun NewSampleLineaFotosScreenPreview() {
-    NewSampleLineaFotosScreen()
-}
+/** Nombres de los 3 pasos del indicador (los usan las 3 pantallas del asistente). */
+val PASOS_ASISTENTE = listOf("Línea y foto", "Conteo y revisión", "Guardar")

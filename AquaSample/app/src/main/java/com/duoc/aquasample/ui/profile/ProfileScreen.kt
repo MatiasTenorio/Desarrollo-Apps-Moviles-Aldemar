@@ -16,14 +16,25 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+<<<<<<< HEAD
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+=======
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Logout
+>>>>>>> 8a704e0 (Feat (Develop: Backend y cambios Parcial 3))
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+<<<<<<< HEAD
+=======
+import androidx.compose.material3.OutlinedButton
+>>>>>>> 8a704e0 (Feat (Develop: Backend y cambios Parcial 3))
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -37,7 +48,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+<<<<<<< HEAD
 import androidx.compose.ui.tooling.preview.Preview
+=======
+>>>>>>> 8a704e0 (Feat (Develop: Backend y cambios Parcial 3))
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.duoc.aquasample.ui.components.StatCard
@@ -54,7 +68,12 @@ import com.duoc.aquasample.ui.theme.AldemarPrincipal
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProfileScreen(
+<<<<<<< HEAD
     viewModel: ProfileViewModel = viewModel()
+=======
+    onCerrarSesion: () -> Unit = {},
+    viewModel: ProfileViewModel = viewModel(factory = ProfileViewModel.Factory)
+>>>>>>> 8a704e0 (Feat (Develop: Backend y cambios Parcial 3))
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val context = LocalContext.current
@@ -159,12 +178,35 @@ fun ProfileScreen(
                     value = uiState.muestrasTotales.toString()
                 )
             }
+<<<<<<< HEAD
+=======
+
+            Spacer(modifier = Modifier.weight(1f))
+
+            OutlinedButton(
+                onClick = {
+                    viewModel.cerrarSesion()
+                    onCerrarSesion()
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(50.dp)
+            ) {
+                Icon(Icons.AutoMirrored.Filled.Logout, contentDescription = null)
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("Cerrar sesión")
+            }
+>>>>>>> 8a704e0 (Feat (Develop: Backend y cambios Parcial 3))
         }
     }
 }
 
+<<<<<<< HEAD
 @Preview(showBackground = true)
 @Composable
 private fun ProfileScreenPreview() {
     ProfileScreen()
 }
+=======
+// Sin @Preview: el ViewModel necesita la sesión y Room de la app real.
+>>>>>>> 8a704e0 (Feat (Develop: Backend y cambios Parcial 3))

@@ -1,6 +1,20 @@
 package com.duoc.aquasample.ui.sampledetail
 
-import androidx.compose.foundation.Image
+import androidx.compose.material3.CircularProgressIndicator
+import com.duoc.aquasample.data.model.EstadoRevision
+import com.duoc.aquasample.data.model.EstadoSync
+import androidx.compose.material.icons.filled.CloudDone
+import androidx.compose.material.icons.filled.CloudOff
+import androidx.compose.material.icons.filled.CloudUpload
+import com.duoc.aquasample.ui.components.StatCard
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.window.DialogProperties
+import coil3.compose.AsyncImage
+import java.io.File
+import me.saket.telephoto.zoomable.EnabledZoomGestures
+import me.saket.telephoto.zoomable.coil3.ZoomableAsyncImage
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -45,7 +59,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -70,11 +83,12 @@ import com.duoc.aquasample.ui.theme.AldemarTexto
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SampleDetailScreen(
-    viewModel: SampleDetailViewModel = viewModel(),
+    viewModel: SampleDetailViewModel = viewModel(factory = SampleDetailViewModel.Factory),
     onBack: () -> Unit = {},
     onEditar: () -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val fotoPath = uiState.fotoPath
     var mostrarFotoCompleta by remember { mutableStateOf(false) }
 
     Scaffold(
@@ -89,6 +103,18 @@ fun SampleDetailScreen(
             )
         }
     ) { paddingValues ->
+        if (uiState.cargando || uiState.noEncontrada) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues),
+                contentAlignment = Alignment.Center
+            ) {
+                if (uiState.cargando) CircularProgressIndicator()
+                else Text("Esta muestra ya no existe.", color = Color.Gray)
+            }
+            return@Scaffold
+        }
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -116,11 +142,13 @@ fun SampleDetailScreen(
                             .background(Color.LightGray, RoundedCornerShape(12.dp)),
                         contentAlignment = Alignment.Center
                     ) {
-                        if (uiState.foto != null) {
-                            Image(
-                                bitmap = uiState.foto!!,
+                        if (fotoPath != null) {
+                            AsyncImage(
+                                model = File(fotoPath),
                                 contentDescription = "Foto de la muestra",
-                                modifier = Modifier.fillMaxSize(),
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .clip(RoundedCornerShape(12.dp)),
                                 contentScale = ContentScale.Crop
                             )
                         } else {
@@ -130,10 +158,12 @@ fun SampleDetailScreen(
                     Spacer(modifier = Modifier.width(12.dp))
                     Column(modifier = Modifier.weight(1f)) {
                         EstadoChip(estado = uiState.estado)
+                        Spacer(modifier = Modifier.height(4.dp))
+                        EstadoSyncTexto(estadoSync = uiState.estadoSync)
                         TextButton(
                             onClick = { mostrarFotoCompleta = true },
                             contentPadding = PaddingValues(0.dp),
-                            enabled = uiState.foto != null
+                            enabled = fotoPath != null
                         ) {
                             Text("Ver foto")
                         }
@@ -157,7 +187,7 @@ fun SampleDetailScreen(
                 StatCard(
                     modifier = Modifier.weight(1f),
                     label = "Tamaño promedio",
-                    value = "${uiState.tamanoPromedioCm} cm"
+                    value = uiState.tamanoPromedioTexto
                 )
             }
 
@@ -175,13 +205,35 @@ fun SampleDetailScreen(
                 DetailCard(modifier = Modifier.weight(1f), label = "Fecha de captura", value = uiState.fechaCaptura)
             }
             Spacer(modifier = Modifier.height(12.dp))
-            DetailCard(modifier = Modifier.fillMaxWidth(), label = "Línea", value = uiState.linea)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                DetailCard(modifier = Modifier.weight(1f), label = "Centro", value = uiState.centro)
+                DetailCard(modifier = Modifier.weight(1f), label = "Tren", value = uiState.tren)
+            }
+            Spacer(modifier = Modifier.height(12.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                DetailCard(modifier = Modifier.weight(1f), label = "Línea", value = uiState.linea)
+                DetailCard(modifier = Modifier.weight(1f), label = "Longitud del tramo", value = uiState.longitudTramo)
+            }
+            Spacer(modifier = Modifier.height(12.dp))
+            DetailCard(modifier = Modifier.fillMaxWidth(), label = "Operador", value = uiState.operador)
+            if (uiState.observaciones.isNotBlank()) {
+                Spacer(modifier = Modifier.height(12.dp))
+                DetailCard(modifier = Modifier.fillMaxWidth(), label = "Observaciones", value = uiState.observaciones)
+            }
 
             Spacer(modifier = Modifier.height(20.dp))
 
             Text("Lista de individuos", fontWeight = FontWeight.Bold)
             Spacer(modifier = Modifier.height(8.dp))
-            Column(
+            if (uiState.mediciones.isEmpty()) {
+                Text("Todavía no hay choritos medidos.", color = Color.Gray)
+            } else Column(
                 modifier = Modifier
                     .fillMaxWidth()
                     .border(1.dp, Color.LightGray, RoundedCornerShape(12.dp))
@@ -226,20 +278,35 @@ fun SampleDetailScreen(
         }
     }
 
-    if (mostrarFotoCompleta && uiState.foto != null) {
+    if (mostrarFotoCompleta && fotoPath != null) {
         FotoCompletaDialog(
-            foto = uiState.foto!!,
+            fotoPath = fotoPath,
             onDismiss = { mostrarFotoCompleta = false }
         )
     }
 }
 
+/** Si la muestra ya llegó al backend o sigue guardada solo en el teléfono. */
 @Composable
-private fun EstadoChip(estado: EstadoMuestra) {
+private fun EstadoSyncTexto(estadoSync: EstadoSync) {
+    val (icono, texto, color) = when (estadoSync) {
+        EstadoSync.SINCRONIZADO -> Triple(Icons.Filled.CloudDone, "Sincronizada", AldemarGuardado)
+        EstadoSync.PENDIENTE -> Triple(Icons.Filled.CloudUpload, "Pendiente de sincronizar", Color.DarkGray)
+        EstadoSync.ERROR -> Triple(Icons.Filled.CloudOff, "Rechazada por el servidor", AldemarAdicional)
+    }
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Icon(icono, contentDescription = null, tint = color, modifier = Modifier.size(16.dp))
+        Spacer(modifier = Modifier.width(4.dp))
+        Text(texto, color = color, fontSize = 12.sp)
+    }
+}
+
+@Composable
+private fun EstadoChip(estado: EstadoRevision) {
     val (fondo, texto) = when (estado) {
-        EstadoMuestra.VALIDADO -> AldemarGuardado.copy(alpha = 0.15f) to AldemarGuardado
-        EstadoMuestra.OBSERVADO -> AldemarAdicional.copy(alpha = 0.15f) to AldemarAdicional
-        EstadoMuestra.PENDIENTE -> Color.LightGray.copy(alpha = 0.5f) to Color.DarkGray
+        EstadoRevision.VALIDADO -> AldemarGuardado.copy(alpha = 0.15f) to AldemarGuardado
+        EstadoRevision.OBSERVADO -> AldemarAdicional.copy(alpha = 0.15f) to AldemarAdicional
+        EstadoRevision.PENDIENTE -> Color.LightGray.copy(alpha = 0.5f) to Color.DarkGray
     }
     Box(
         modifier = Modifier
@@ -250,20 +317,6 @@ private fun EstadoChip(estado: EstadoMuestra) {
     }
 }
 
-@Composable
-private fun StatCard(modifier: Modifier = Modifier, label: String, value: String) {
-    Card(
-        modifier = modifier,
-        shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = AldemarSecundario)
-    ) {
-        Column(modifier = Modifier.padding(12.dp)) {
-            Text(label, style = MaterialTheme.typography.bodySmall, color = Color.DarkGray)
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(value, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = AldemarTexto)
-        }
-    }
-}
 
 @Composable
 private fun DetailCard(modifier: Modifier = Modifier, label: String, value: String) {
@@ -302,24 +355,40 @@ private fun MedicionRow(medicion: ChoritoMedicion) {
     }
 }
 
+/**
+ * Foto a pantalla completa con Telephoto: pellizcar para ampliar, arrastrar
+ * para moverse y doble toque para acercar/alejar. Sirve para revisar cada
+ * chorito de cerca.
+ */
 @Composable
-private fun FotoCompletaDialog(foto: ImageBitmap, onDismiss: () -> Unit) {
-    Dialog(onDismissRequest = onDismiss) {
-        Card(shape = RoundedCornerShape(16.dp)) {
-            Image(
-                bitmap = foto,
-                contentDescription = "Foto de la muestra en grande",
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(320.dp),
-                contentScale = ContentScale.Fit
+private fun FotoCompletaDialog(fotoPath: String, onDismiss: () -> Unit) {
+    Dialog(
+        onDismissRequest = onDismiss,
+        properties = DialogProperties(usePlatformDefaultWidth = false)
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.Black)
+        ) {
+            ZoomableAsyncImage(
+                model = File(fotoPath),
+                contentDescription = "Foto de la muestra ampliada",
+                gestures = EnabledZoomGestures.ZoomAndPan,
+                modifier = Modifier.fillMaxSize()
             )
+            IconButton(
+                onClick = onDismiss,
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .statusBarsPadding()
+                    .padding(8.dp)
+            ) {
+                Icon(Icons.Filled.Close, contentDescription = "Cerrar", tint = Color.White)
+            }
         }
     }
 }
 
-@Preview(showBackground = true)
-@Composable
-private fun SampleDetailScreenPreview() {
-    SampleDetailScreen()
-}
+// Sin @Preview: esta pantalla necesita una muestra real de Room (llega por su id),
+// que no existe en el panel de vista previa de Android Studio.

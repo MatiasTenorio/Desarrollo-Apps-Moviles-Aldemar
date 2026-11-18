@@ -1,10 +1,28 @@
 package com.duoc.aquasample.ui.navigation
 
+import com.duoc.aquasample.ui.sampledetail.SampleDetailViewModel
+
 sealed class Screen(val route: String) {
     data object Login : Screen("login")
     data object Home : Screen("home")
+
+    /** Grafo anidado del asistente "Nueva muestra": sus pasos comparten ViewModel. */
     data object NewSample : Screen("new_sample")
+    data object NewSampleLineaFoto : Screen("new_sample/linea_foto")
+    data object NewSampleCamara : Screen("new_sample/camara")
+    data object NewSampleConteo : Screen("new_sample/conteo")
+    data object NewSampleGuardar : Screen("new_sample/guardar")
+
     data object History : Screen("history")
+
+    data object SampleDetail : Screen("sample_detail/{${SampleDetailViewModel.ARG_MUESTRA_ID}}") {
+        fun crearRuta(muestraId: Long): String = "sample_detail/$muestraId"
+    }
+
     data object Profile : Screen("profile")
+<<<<<<< HEAD
     data object SampleForm : Screen("sample_form")
 }
+=======
+}
+>>>>>>> 8a704e0 (Feat (Develop: Backend y cambios Parcial 3))

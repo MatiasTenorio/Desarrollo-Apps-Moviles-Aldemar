@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    El backend local corre en http (sin TLS). Android bloquea http por defecto,
+    así que se permite solo mientras la app se usa contra un servidor de
+    desarrollo. Con un backend en producción (https) esto se debe quitar.
+-->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="true" />
+</network-security-config>

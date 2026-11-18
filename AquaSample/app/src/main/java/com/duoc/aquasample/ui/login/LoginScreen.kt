@@ -77,7 +77,7 @@ private val OndaSuperiorShape = GenericShape { size, _ ->
 @Composable
 fun LoginScreen(
     onLoginExitoso: (Rol) -> Unit,
-    viewModel: LoginViewModel = viewModel()
+    viewModel: LoginViewModel = viewModel(factory = LoginViewModel.Factory)
 ) {
     val state by viewModel.uiState.collectAsState()
 

@@ -1,26 +1,37 @@
 package com.duoc.aquasample.ui.home
 
 import androidx.lifecycle.ViewModel
-import kotlinx.coroutines.flow.MutableStateFlow
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.initializer
+import androidx.lifecycle.viewmodel.viewModelFactory
+import com.duoc.aquasample.data.repository.SesionRepository
+import com.duoc.aquasample.ui.appContainer
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 
-/**
- * Estado de la pantalla Home.
- *
- * userName: nombre a mostrar en el saludo ("Hola, Matías"). Por ahora se recibe
- * como parámetro simple (dato local/mock) porque el login todavía no expone
- * un repositorio de sesión real. Cuando exista, reemplazar el constructor por
- * la lectura del usuario autenticado desde ese repositorio.
- */
+/** Estado de la pantalla Home: nombre para el saludo ("Hola, operador1"). */
 data class HomeUiState(
     val userName: String = "Usuario"
 )
 
 class HomeViewModel(
-    userName: String = "Usuario"
+    sesion: SesionRepository
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow(HomeUiState(userName = userName))
-    val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
+    val uiState: StateFlow<HomeUiState> = sesion.usuario
+        .map { HomeUiState(userName = it?.nombreUsuario ?: "Usuario") }
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.Eagerly,
+            initialValue = HomeUiState(userName = sesion.usuario.value?.nombreUsuario ?: "Usuario")
+        )
+
+    companion object {
+        val Factory: ViewModelProvider.Factory = viewModelFactory {
+            initializer { HomeViewModel(appContainer().sesionRepository) }
+        }
+    }
 }
