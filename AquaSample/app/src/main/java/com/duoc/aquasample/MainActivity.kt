@@ -13,10 +13,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             AquaSampleTheme {
-<<<<<<< HEAD
-=======
                 // Una sola navegación (antes había dos NavHost dibujados uno encima del otro).
->>>>>>> 8a704e0 (Feat (Develop: Backend y cambios Parcial 3))
                 AquaSampleApp()
             }
         }

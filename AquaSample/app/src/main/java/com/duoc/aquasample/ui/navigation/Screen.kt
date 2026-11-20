@@ -20,9 +20,4 @@ sealed class Screen(val route: String) {
     }
 
     data object Profile : Screen("profile")
-<<<<<<< HEAD
-    data object SampleForm : Screen("sample_form")
 }
-=======
-}
->>>>>>> 8a704e0 (Feat (Develop: Backend y cambios Parcial 3))

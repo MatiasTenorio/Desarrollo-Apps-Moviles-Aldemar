@@ -8,10 +8,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-<<<<<<< HEAD
-import androidx.lifecycle.viewmodel.compose.viewModel
-=======
->>>>>>> 8a704e0 (Feat (Develop: Backend y cambios Parcial 3))
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
@@ -29,16 +25,11 @@ import com.duoc.aquasample.ui.home.HomeScreen
 import com.duoc.aquasample.ui.login.LoginScreen
 import com.duoc.aquasample.ui.newSample.NewSampleLineaFotosScreen
 import com.duoc.aquasample.ui.newSample.NewSampleViewModel
-<<<<<<< HEAD
-import com.duoc.aquasample.ui.postsampleform.SampleFormScreen
-import com.duoc.aquasample.ui.profile.ProfileScreen
-=======
 import com.duoc.aquasample.ui.newSample.NewSampleConteoScreen
 import com.duoc.aquasample.ui.newSample.NewSampleGuardarScreen
 import com.duoc.aquasample.ui.profile.ProfileScreen
 import com.duoc.aquasample.ui.sampledetail.SampleDetailScreen
 import com.duoc.aquasample.ui.sampledetail.SampleDetailViewModel
->>>>>>> 8a704e0 (Feat (Develop: Backend y cambios Parcial 3))
 
 /**
  * Única navegación de la app (un solo NavHost y una sola barra inferior).
@@ -94,43 +85,6 @@ fun AquaSampleApp() {
                     onNavigateToProfile = { navController.navigateToTab(Screen.Profile.route) }
                 )
             }
-<<<<<<< HEAD
-            composable(Screen.NewSample.route) {
-                NewSampleLineaFotosScreen(
-                    onBack = { navController.popBackStack() },
-                    onSiguiente = { navController.navigate(Screen.SampleForm.route) }
-                )
-            }
-            composable(Screen.History.route) {
-                HistoryScreen(
-                    onBack = { navController.popBackStack() },
-                    onFiltroClick = { /* pendiente: filtros */ },
-                    onMuestraClick = { /* pendiente: detalle de muestra */ }
-                )
-            }
-            composable(Screen.Profile.route) {
-                ProfileScreen()
-            }
-            composable(Screen.SampleForm.route) { entry ->
-                // Misma instancia del ViewModel que usa el paso 1 (línea + foto)
-                val newSampleEntry = remember(entry) {
-                    navController.getBackStackEntry(Screen.NewSample.route)
-                }
-                val newSampleViewModel: NewSampleViewModel = viewModel(newSampleEntry)
-                val newSampleState by newSampleViewModel.uiState.collectAsState()
-
-                SampleFormScreen(
-                    foto = newSampleState.foto,
-                    lineaInicial = newSampleState.lineaSeleccionada
-                        .filter { it.isDigit() }.toIntOrNull() ?: 1,
-                    onBack = { navController.popBackStack() },
-                    onGuardado = {
-                        newSampleViewModel.reiniciar()
-                        // Al guardar, vamos al Historial y descartamos el asistente
-                        navController.navigate(Screen.History.route) {
-                            popUpTo(Screen.Home.route)
-                            launchSingleTop = true
-=======
 
             // Asistente: los ViewModels se crean en la entrada del grafo
             // "new_sample" (no en cada paso), así lo elegido en el paso 1 sigue
@@ -219,7 +173,6 @@ fun AquaSampleApp() {
                         // Vuelve al Login y borra todo el historial de navegación.
                         navController.navigate(Screen.Login.route) {
                             popUpTo(navController.graph.id) { inclusive = true }
->>>>>>> 8a704e0 (Feat (Develop: Backend y cambios Parcial 3))
                         }
                     }
                 )

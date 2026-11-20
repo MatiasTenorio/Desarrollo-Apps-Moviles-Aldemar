@@ -3,10 +3,6 @@ package com.duoc.aquasample.ui.history
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
-<<<<<<< HEAD
-import com.duoc.aquasample.data.local.MuestrasRepository
-import com.duoc.aquasample.data.model.Muestra
-=======
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.duoc.aquasample.data.model.EstadoSync
@@ -18,7 +14,6 @@ import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
->>>>>>> 8a704e0 (Feat (Develop: Backend y cambios Parcial 3))
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -28,28 +23,6 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 
-<<<<<<< HEAD
-class HistoryViewModel : ViewModel() {
-
-    private val _busqueda = MutableStateFlow("")
-    val busqueda: StateFlow<String> = _busqueda.asStateFlow()
-
-    // Lista filtrada: se recalcula cuando cambian las muestras guardadas o el texto
-    val muestras: StateFlow<List<Muestra>> =
-        combine(MuestrasRepository.muestras, _busqueda) { lista, texto ->
-            val q = texto.trim().lowercase()
-            if (q.isEmpty()) lista
-            else lista.filter {
-                it.id.lowercase().contains(q) ||
-                        it.fecha.contains(q) ||
-                        "línea ${it.linea}".lowercase().contains(q)
-            }
-        }.stateIn(
-            viewModelScope,
-            SharingStarted.WhileSubscribed(5_000),
-            MuestrasRepository.muestras.value
-        )
-=======
 /** Lo que muestra cada tarjeta del Historial (ya formateado para la UI). */
 data class MuestraItem(
     val idInterno: Long,
@@ -173,13 +146,10 @@ class HistoryViewModel(
     val resumen: StateFlow<ResumenHistorial> = resultados
         .map { it.resumen() }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), ResumenHistorial())
->>>>>>> 8a704e0 (Feat (Develop: Backend y cambios Parcial 3))
 
     fun onBusquedaChange(texto: String) {
         _busqueda.value = texto
     }
-<<<<<<< HEAD
-=======
 
     fun onFiltroChange(filtro: FiltroHistorial) {
         _filtro.value = filtro
@@ -194,5 +164,4 @@ class HistoryViewModel(
             initializer { HistoryViewModel(appContainer().muestraRepository) }
         }
     }
->>>>>>> 8a704e0 (Feat (Develop: Backend y cambios Parcial 3))
 }

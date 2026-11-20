@@ -56,11 +56,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil3.compose.AsyncImage
 import com.duoc.aquasample.R
-<<<<<<< HEAD
-import com.duoc.aquasample.data.model.Muestra
-=======
 import java.io.File
->>>>>>> 8a704e0 (Feat (Develop: Backend y cambios Parcial 3))
 
 // Puedes mover estos colores a ui/theme/Color.kt
 private val AzulPrimario = Color(0xFF1E88E5)
@@ -72,14 +68,8 @@ private val TextoSecundario = Color(0xFF6B7A8C)
 @Composable
 fun HistoryScreen(
     onBack: () -> Unit = {},
-<<<<<<< HEAD
-    onFiltroClick: () -> Unit = {},
-    onMuestraClick: (String) -> Unit = {},
-    viewModel: HistoryViewModel = viewModel()
-=======
     onMuestraClick: (Long) -> Unit = {},
     viewModel: HistoryViewModel = viewModel(factory = HistoryViewModel.Factory)
->>>>>>> 8a704e0 (Feat (Develop: Backend y cambios Parcial 3))
 ) {
     val muestras by viewModel.muestras.collectAsStateWithLifecycle()
     val busqueda by viewModel.busqueda.collectAsStateWithLifecycle()
@@ -96,11 +86,7 @@ fun HistoryScreen(
         onFiltroChange = viewModel::onFiltroChange,
         onLimpiarFiltros = viewModel::onLimpiarFiltros,
         onBack = onBack,
-<<<<<<< HEAD
-        onFiltroClick = onFiltroClick,
-=======
         onFiltroClick = { mostrarFiltros = true },
->>>>>>> 8a704e0 (Feat (Develop: Backend y cambios Parcial 3))
         onMuestraClick = onMuestraClick
     )
 
@@ -128,11 +114,7 @@ private fun HistoryContent(
     onLimpiarFiltros: () -> Unit,
     onBack: () -> Unit,
     onFiltroClick: () -> Unit,
-<<<<<<< HEAD
-    onMuestraClick: (String) -> Unit
-=======
     onMuestraClick: (Long) -> Unit
->>>>>>> 8a704e0 (Feat (Develop: Backend y cambios Parcial 3))
 ) {
     Scaffold(
         containerColor = FondoPantalla,
@@ -166,11 +148,7 @@ private fun HistoryContent(
                     actionIconContentColor = Color.White
                 )
             )
-<<<<<<< HEAD
-        }
-=======
         },
->>>>>>> 8a704e0 (Feat (Develop: Backend y cambios Parcial 3))
     ) { innerPadding ->
         Column(
             modifier = Modifier
@@ -202,13 +180,8 @@ private fun HistoryContent(
             if (muestras.isEmpty()) {
                 Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     Text(
-<<<<<<< HEAD
-                        text = if (busqueda.isBlank()) "Aún no has guardado muestras"
-                        else "No se encontraron muestras",
-=======
                         if (busqueda.isBlank() && filtro.cantidadActivos == 0) "Aún no hay muestras registradas"
                         else "No hay muestras con esos filtros",
->>>>>>> 8a704e0 (Feat (Develop: Backend y cambios Parcial 3))
                         color = TextoSecundario
                     )
                 }
@@ -272,27 +245,6 @@ private fun MuestraCard(
                 .padding(12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-<<<<<<< HEAD
-            val fotoMuestra = muestra.foto
-            val modificadorFoto = Modifier
-                .size(76.dp)
-                .clip(RoundedCornerShape(14.dp))
-            if (fotoMuestra != null) {
-                Image(
-                    bitmap = fotoMuestra,
-                    contentDescription = "Foto de la muestra ${muestra.id}",
-                    contentScale = ContentScale.Crop,
-                    modifier = modificadorFoto
-                )
-            } else {
-                Image(
-                    painter = painterResource(R.drawable.chorito),
-                    contentDescription = "Foto de la muestra ${muestra.id}",
-                    contentScale = ContentScale.Crop,
-                    modifier = modificadorFoto
-                )
-            }
-=======
             // Foto real de la muestra; si no hay o falla, la imagen genérica de chorito.
             AsyncImage(
                 model = muestra.fotoPath?.let(::File),
@@ -305,7 +257,6 @@ private fun MuestraCard(
                     .size(76.dp)
                     .clip(RoundedCornerShape(14.dp))
             )
->>>>>>> 8a704e0 (Feat (Develop: Backend y cambios Parcial 3))
 
             Spacer(Modifier.width(14.dp))
 
@@ -349,13 +300,8 @@ private fun MuestraCard(
 private fun HistoryPreview() {
     HistoryContent(
         muestras = listOf(
-<<<<<<< HEAD
-            Muestra("#0002", "09/09/2026", 2, List(39) { 5.4 }),
-            Muestra("#0001", "08/09/2026", 1, List(43) { 5.1 })
-=======
             MuestraItem(7, "#0007", "09/09/2026", 2, 39),
             MuestraItem(6, "#0006", "08/09/2026", 1, 43)
->>>>>>> 8a704e0 (Feat (Develop: Backend y cambios Parcial 3))
         ),
         busqueda = "",
         filtro = FiltroHistorial(linea = 2),
