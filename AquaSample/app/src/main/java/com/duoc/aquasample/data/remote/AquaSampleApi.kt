@@ -13,4 +13,11 @@ interface AquaSampleApi {
 
     @POST("api/muestras")
     suspend fun guardarMuestra(@Body muestra: MuestraRemotaRequest): Response<MuestraRemotaResponse>
+
+    /**
+     * Registra en la base propia al usuario que inició sesión en Insforge (o lo
+     * devuelve si ya existía) y entrega su nombre y rol.
+     */
+    @POST("api/usuarios")
+    suspend fun registrarUsuario(@Body usuario: RegistroUsuarioRequest): UsuarioRemotoResponse
 }

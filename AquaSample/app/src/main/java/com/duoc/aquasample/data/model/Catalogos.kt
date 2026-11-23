@@ -15,4 +15,17 @@ object Catalogos {
     val trenes: List<String> = listOf("Tren 1", "Tren 2", "Tren 3", "Tren 4")
 
     val lineas: List<Int> = (1..10).toList()
+
+    /**
+     * Ubicación de referencia de cada centro (ficticia, en el mar interior de
+     * Chiloé y el seno de Reloncaví, donde se cultivan choritos). Se usa para
+     * consultar las condiciones del mar en Open-Meteo Marine.
+     */
+    val coordenadas: Map<String, Coordenada> = mapOf(
+        "Centro Bahía Norte" to Coordenada(latitud = -41.72, longitud = -73.10),
+        "Centro Estero Sur" to Coordenada(latitud = -42.40, longitud = -73.55),
+        "Centro Isla Verde" to Coordenada(latitud = -42.60, longitud = -73.45)
+    )
 }
+
+data class Coordenada(val latitud: Double, val longitud: Double)

@@ -2,9 +2,10 @@ package com.duoc.aquasample.ui.login
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
-import com.duoc.aquasample.data.local.UsuariosMock
+import com.duoc.aquasample.data.auth.Autenticador
 import com.duoc.aquasample.data.model.Rol
 import com.duoc.aquasample.data.repository.SesionRepository
 import com.duoc.aquasample.ui.appContainer
@@ -12,17 +13,21 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 
 data class LoginUiState(
+    /** Correo con el que el usuario está registrado en Insforge. */
     val usuario: String = "",
     val contrasena: String = "",
     val contrasenaVisible: Boolean = false,
+    val cargando: Boolean = false,
     val error: String? = null,
     val rolAutenticado: Rol? = null   // si no es null, el login fue exitoso
 )
 
 class LoginViewModel(
-    private val sesion: SesionRepository
+    private val sesion: SesionRepository,
+    private val autenticador: Autenticador
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(LoginUiState())
@@ -39,18 +44,25 @@ class LoginViewModel(
 
     fun iniciarSesion() {
         val estado = _uiState.value
+        if (estado.cargando) return
 
         if (estado.usuario.isBlank() || estado.contrasena.isBlank()) {
-            _uiState.update { it.copy(error = "Completa usuario y contraseña") }
+            _uiState.update { it.copy(error = "Completa correo y contraseña") }
             return
         }
 
-        val usuario = UsuariosMock.validar(estado.usuario.trim(), estado.contrasena)
-        if (usuario == null) {
-            _uiState.update { it.copy(error = "Usuario o contraseña incorrectos") }
-        } else {
-            sesion.iniciar(usuario)
-            _uiState.update { it.copy(error = null, rolAutenticado = usuario.rol) }
+        viewModelScope.launch {
+            _uiState.update { it.copy(cargando = true, error = null) }
+            autenticador.iniciarSesion(estado.usuario, estado.contrasena)
+                .onSuccess { usuario ->
+                    sesion.iniciar(usuario)
+                    _uiState.update { it.copy(cargando = false, rolAutenticado = usuario.rol) }
+                }
+                .onFailure { error ->
+                    _uiState.update {
+                        it.copy(cargando = false, error = error.message ?: "No se pudo iniciar sesión")
+                    }
+                }
         }
     }
 
@@ -60,8 +72,10 @@ class LoginViewModel(
 
     companion object {
         val Factory: ViewModelProvider.Factory = viewModelFactory {
-            initializer { LoginViewModel(appContainer().sesionRepository) }
+            initializer {
+                val container = appContainer()
+                LoginViewModel(container.sesionRepository, container.autenticador)
+            }
         }
     }
 }
-

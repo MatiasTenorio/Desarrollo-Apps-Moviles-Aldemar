@@ -14,3 +14,7 @@
 .cxx
 local.properties
 /.idea
+# Firma del APK release (nunca subir a git)
+keystore.properties
+*.jks
+*.keystore

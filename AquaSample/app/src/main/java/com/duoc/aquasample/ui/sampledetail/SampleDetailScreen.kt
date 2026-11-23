@@ -48,7 +48,9 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.TextButton
+import androidx.compose.ui.platform.testTag
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -169,6 +171,24 @@ fun SampleDetailScreen(
                         }
                     }
                 }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Text("Estado de revisión", fontWeight = FontWeight.Bold)
+            Spacer(modifier = Modifier.height(8.dp))
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                EstadoRevision.entries.forEach { estado ->
+                    FilterChip(
+                        selected = uiState.estado == estado,
+                        onClick = { viewModel.cambiarEstado(estado) },
+                        label = { Text(estado.etiqueta) },
+                        modifier = Modifier.testTag("estado_${estado.name}")
+                    )
+                }
+            }
+            uiState.errorEstado?.let {
+                Text(it, color = MaterialTheme.colorScheme.error, fontSize = 13.sp)
             }
 
             Spacer(modifier = Modifier.height(20.dp))

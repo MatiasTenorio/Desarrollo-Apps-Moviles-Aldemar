@@ -1,5 +1,7 @@
 package com.duoc.aquasample.ui.login
 
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.ui.platform.testTag
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -184,13 +186,13 @@ private fun LoginContent(
             TextField(
                 value = state.usuario,
                 onValueChange = onUsuarioChange,
-                modifier = Modifier.fillMaxWidth(),
-                placeholder = { Text("Usuario") },
+                modifier = Modifier.fillMaxWidth().testTag("campo_usuario"),
+                placeholder = { Text("Correo") },
                 leadingIcon = { Icon(Icons.Default.Person, contentDescription = null) },
                 singleLine = true,
                 shape = formaCampo,
                 colors = campoColors,
-                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next)
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email, imeAction = ImeAction.Next)
             )
 
             Spacer(Modifier.height(16.dp))
@@ -198,7 +200,7 @@ private fun LoginContent(
             TextField(
                 value = state.contrasena,
                 onValueChange = onContrasenaChange,
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth().testTag("campo_contrasena"),
                 placeholder = { Text("Contraseña") },
                 leadingIcon = { Icon(Icons.Default.Lock, contentDescription = null) },
                 trailingIcon = {
@@ -229,7 +231,8 @@ private fun LoginContent(
                 Text(
                     text = mensaje,
                     color = MaterialTheme.colorScheme.error,
-                    fontSize = 13.sp
+                    fontSize = 13.sp,
+                    modifier = Modifier.testTag("error_login")
                 )
             }
 
@@ -237,14 +240,19 @@ private fun LoginContent(
 
             Button(
                 onClick = onIniciarSesion,
-                modifier = Modifier.fillMaxWidth().height(52.dp),
+                enabled = !state.cargando,
+                modifier = Modifier.fillMaxWidth().height(52.dp).testTag("boton_ingresar"),
                 shape = RoundedCornerShape(50),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = AldemarPrincipal,
                     contentColor = Color.White
                 )
             ) {
-                Text("Iniciar sesión", fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
+                if (state.cargando) {
+                    CircularProgressIndicator(color = Color.White, strokeWidth = 2.dp, modifier = Modifier.size(22.dp))
+                } else {
+                    Text("Iniciar sesión", fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
+                }
             }
 
             Spacer(Modifier.height(12.dp))

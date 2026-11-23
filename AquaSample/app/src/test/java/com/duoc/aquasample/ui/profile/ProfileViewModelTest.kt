@@ -77,4 +77,20 @@ class ProfileViewModelTest {
         assertEquals("Analista de reportes", Rol.ANALISTA.etiqueta())
         assertEquals(0 to 0, contarMuestrasDe(null, muestras.value, hoy))
     }
+
+    @Test
+    fun `si la foto elegida no se puede abrir queda sin foto y termina de cargar`() {
+        val contexto = mockk<android.content.Context>()
+        val uri = mockk<android.net.Uri>()
+        every { contexto.contentResolver.openInputStream(uri) } returns null
+        val viewModel = crearViewModel()
+
+        viewModel.onFotoSeleccionadaDesdeGaleria(uri, contexto)
+        // La lectura corre en Dispatchers.IO (otro hilo): se espera a que termine.
+        val limite = System.currentTimeMillis() + 2_000
+        while (viewModel.uiState.value.cargandoFoto && System.currentTimeMillis() < limite) Thread.sleep(10)
+
+        assertEquals(null, viewModel.uiState.value.foto)
+        assertEquals(false, viewModel.uiState.value.cargandoFoto)
+    }
 }

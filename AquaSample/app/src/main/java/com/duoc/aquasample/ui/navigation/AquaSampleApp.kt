@@ -20,6 +20,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.duoc.aquasample.ui.camera.CameraCaptureScreen
 import com.duoc.aquasample.ui.components.BottomNavBar
+import com.duoc.aquasample.ui.dashboard.DashboardScreen
 import com.duoc.aquasample.ui.history.HistoryScreen
 import com.duoc.aquasample.ui.home.HomeScreen
 import com.duoc.aquasample.ui.login.LoginScreen
@@ -82,7 +83,8 @@ fun AquaSampleApp() {
                 HomeScreen(
                     onNavigateToNewSample = { navController.navigateToTab(Screen.NewSample.route) },
                     onNavigateToHistory = { navController.navigateToTab(Screen.History.route) },
-                    onNavigateToProfile = { navController.navigateToTab(Screen.Profile.route) }
+                    onNavigateToProfile = { navController.navigateToTab(Screen.Profile.route) },
+                    onNavigateToDashboard = { navController.navigate(Screen.Dashboard.route) }
                 )
             }
 
@@ -165,6 +167,10 @@ fun AquaSampleApp() {
                 )
             ) {
                 SampleDetailScreen(onBack = { navController.popBackStack() })
+            }
+
+            composable(Screen.Dashboard.route) {
+                DashboardScreen(onBack = { navController.popBackStack() })
             }
 
             composable(Screen.Profile.route) {

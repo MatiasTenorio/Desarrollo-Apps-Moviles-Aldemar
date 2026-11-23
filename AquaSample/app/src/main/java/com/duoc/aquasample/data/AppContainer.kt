@@ -2,8 +2,18 @@ package com.duoc.aquasample.data
 
 import android.content.Context
 import androidx.room.Room
+import com.duoc.aquasample.data.auth.Autenticador
+import com.duoc.aquasample.data.auth.AutenticadorInsforge
+import dev.insforge.auth.Auth
+import dev.insforge.auth.auth
+import dev.insforge.createInsforgeClient
 import com.duoc.aquasample.BuildConfig
 import com.duoc.aquasample.data.remote.AquaSampleApi
+import com.duoc.aquasample.data.remote.OpenMeteoApi
+import com.duoc.aquasample.data.reporte.GeneradorReporte
+import com.duoc.aquasample.data.reporte.GeneradorReportePdf
+import com.duoc.aquasample.data.repository.ClimaMarinoRepository
+import com.duoc.aquasample.data.repository.ClimaMarinoRepositoryImpl
 import com.duoc.aquasample.data.sync.ProgramadorSincronizacion
 import com.duoc.aquasample.data.sync.SincronizadorMuestras
 import retrofit2.Retrofit
@@ -55,7 +65,39 @@ class AppContainer(context: Context) {
         SincronizadorMuestras(muestraRepository, api)
     }
 
+    /** API externa Open-Meteo Marine: otro servidor, por eso su propio Retrofit. */
+    val climaMarinoRepository: ClimaMarinoRepository by lazy {
+        val openMeteo = Retrofit.Builder()
+            .baseUrl(OpenMeteoApi.URL_BASE)
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
+            .create(OpenMeteoApi::class.java)
+        ClimaMarinoRepositoryImpl(openMeteo)
+    }
+
+    val generadorReporte: GeneradorReporte by lazy { GeneradorReportePdf(context.applicationContext) }
+
     val sesionRepository: SesionRepository = SesionRepository()
+
+    /**
+     * Login con Insforge. La URL y la anon key se leen de local.properties
+     * (insforge.baseUrl / insforge.anonKey), que no se sube a git.
+     */
+    val autenticador: Autenticador by lazy {
+        val configurado = BuildConfig.INSFORGE_BASE_URL.isNotBlank() && BuildConfig.INSFORGE_ANON_KEY.isNotBlank()
+        val insforge = if (configurado) {
+            createInsforgeClient(BuildConfig.INSFORGE_BASE_URL, BuildConfig.INSFORGE_ANON_KEY) {
+                install(Auth)
+            }
+        } else {
+            null
+        }
+        AutenticadorInsforge(
+            iniciarEnInsforge = { correo, clave -> insforge?.auth?.signIn(email = correo, password = clave) },
+            api = api,
+            configurado = configurado
+        )
+    }
 
     val fotoRepository: FotoRepository = FotoRepositoryImpl(context)
 }

@@ -43,7 +43,8 @@ data class SampleDetailUiState(
     /** Ruta del JPG; la pantalla la muestra con Coil y la amplía con Telephoto. */
     val fotoPath: String? = null,
     val mediciones: List<ChoritoMedicion> = emptyList(),
-    val mostrarTodasLasMediciones: Boolean = false
+    val mostrarTodasLasMediciones: Boolean = false,
+    val errorEstado: String? = null
 ) {
     val medicionesVisibles: List<ChoritoMedicion>
         get() = if (mostrarTodasLasMediciones) mediciones else mediciones.take(5)
@@ -86,7 +87,7 @@ internal fun SampleDetailUiState.conMuestra(muestra: Muestra): SampleDetailUiSta
  */
 class SampleDetailViewModel(
     savedStateHandle: SavedStateHandle,
-    repository: MuestraRepository
+    private val repository: MuestraRepository
 ) : ViewModel() {
 
     private val muestraId: Long = checkNotNull(savedStateHandle[ARG_MUESTRA_ID]) {
@@ -107,6 +108,25 @@ class SampleDetailViewModel(
                     }
                 }
             }
+        }
+    }
+
+    /**
+     * Revisión del Operador: Pendiente → Observado → Validado. Misma regla que
+     * ValidadorMuestra y el backend: no se valida una muestra sin choritos.
+     * El repositorio la deja pendiente de sincronizar, así el backend recibe el cambio.
+     */
+    fun cambiarEstado(nuevo: EstadoRevision) {
+        val actual = _uiState.value
+        if (actual.cargando || actual.noEncontrada || actual.estado == nuevo) return
+        if (nuevo == EstadoRevision.VALIDADO && actual.cantidadChoritos == 0) {
+            _uiState.update { it.copy(errorEstado = "No se puede validar una muestra sin choritos contados") }
+            return
+        }
+        _uiState.update { it.copy(errorEstado = null) }
+        viewModelScope.launch {
+            runCatching { repository.cambiarEstado(muestraId, nuevo) }
+                .onFailure { _uiState.update { it.copy(errorEstado = "No se pudo cambiar el estado") } }
         }
     }
 

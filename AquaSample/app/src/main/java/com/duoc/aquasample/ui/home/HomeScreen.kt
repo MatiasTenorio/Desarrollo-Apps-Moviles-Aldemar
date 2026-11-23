@@ -12,8 +12,11 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Home
@@ -71,9 +74,12 @@ fun HomeScreen(
     onNavigateToNewSample: () -> Unit = {},
     onNavigateToHistory: () -> Unit = {},
     onNavigateToProfile: () -> Unit = {},
+    onNavigateToDashboard: () -> Unit = {},
     onOpenMenu: () -> Unit = {} // TODO: definir qué abre el ícono de menú (¿Drawer con cerrar sesión / configuración?)
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val centroClima by viewModel.centroClima.collectAsState()
+    val climaState by viewModel.climaState.collectAsState()
 
     Scaffold(
         topBar = {
@@ -107,6 +113,7 @@ fun HomeScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
+                .verticalScroll(rememberScrollState())
                 .padding(horizontal = 20.dp, vertical = 16.dp)
         ) {
             Text(
@@ -180,6 +187,38 @@ fun HomeScreen(
                     onClick = onNavigateToProfile
                 )
             }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Dashboard y reportes (gráficos + exportar PDF de muestras validadas)
+            Card(
+                onClick = onNavigateToDashboard,
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(containerColor = AldemarSecundario)
+            ) {
+                Row(
+                    modifier = Modifier.padding(16.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(Icons.Default.BarChart, contentDescription = null, tint = AldemarTexto)
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Column {
+                        Text("Dashboard y reportes", fontWeight = FontWeight.Bold, color = AldemarTexto)
+                        Text("Indicadores, gráficos y reporte PDF", fontSize = 12.sp, color = Color.Gray)
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            CondicionesMarCard(
+                centros = viewModel.centros,
+                centro = centroClima,
+                estado = climaState,
+                onCentroSeleccionado = viewModel::onCentroClimaSeleccionado,
+                onReintentar = viewModel::actualizarClima
+            )
         }
     }
 }
@@ -218,5 +257,5 @@ private fun HomeSecondaryCard(
 @Composable
 private fun HomeScreenPreview() {
     val sesion = SesionRepository().apply { iniciar(Usuario("Matías", "", Rol.OPERADOR)) }
-    HomeScreen(viewModel = HomeViewModel(sesion))
+    HomeScreen(viewModel = HomeViewModel(sesion, { Result.failure(Exception("Vista previa")) }))
 }

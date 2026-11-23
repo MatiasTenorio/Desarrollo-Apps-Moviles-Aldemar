@@ -30,6 +30,9 @@ sincronización de las muestras guardadas offline en la app.
 | PUT | `/api/muestras/{id}` | Actualiza |
 | PATCH | `/api/muestras/{id}/estado` | Cambia el estado: `PENDIENTE`, `OBSERVADO` o `VALIDADO` |
 | DELETE | `/api/muestras/{id}` | Elimina la muestra y sus choritos |
+| POST | `/api/usuarios` | La app lo llama tras iniciar sesión en Insforge: registra al usuario (rol OPERADOR la primera vez) y devuelve nombre y rol |
+| GET | `/api/usuarios` | Lista los usuarios |
+| PATCH | `/api/usuarios/{id}/rol` | Cambia el rol: `OPERADOR` o `ANALISTA` |
 
 Los errores se responden con texto plano y código 400 o 404.
 

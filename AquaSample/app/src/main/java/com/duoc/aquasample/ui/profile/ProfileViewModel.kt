@@ -70,7 +70,7 @@ class ProfileViewModel(
             combine(sesion.usuario, repository.observarMuestras()) { usuario, muestras ->
                 usuario to muestras
             }.collect { (usuario, muestras) ->
-                val (deHoy, total) = contarMuestrasDe(usuario?.nombreUsuario, muestras, hoy())
+                val (deHoy, total) = contarMuestrasDe(usuario?.correo, muestras, hoy())
                 _uiState.update {
                     it.copy(
                         nombreUsuario = usuario?.nombreUsuario.orEmpty(),

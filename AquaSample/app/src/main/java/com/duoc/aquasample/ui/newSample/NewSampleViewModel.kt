@@ -289,7 +289,7 @@ class NewSampleViewModel(
 
     /** La muestra tal como quedaría guardada (para el resumen del paso 3). */
     fun muestraActual(): Muestra =
-        _uiState.value.aMuestra(operador = sesion.usuario.value?.nombreUsuario.orEmpty(), ahora = ahora())
+        _uiState.value.aMuestra(operador = sesion.usuario.value?.correo.orEmpty(), ahora = ahora())
 
     /**
      * Valida y guarda en Room. Si sale bien deja idGuardada con el id nuevo

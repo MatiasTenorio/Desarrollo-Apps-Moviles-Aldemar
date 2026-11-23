@@ -7,11 +7,16 @@ import com.duoc.aquasample.data.model.Muestra
 import com.duoc.aquasample.data.model.muestraDePrueba
 import com.duoc.aquasample.data.repository.MuestraRepository
 import com.duoc.aquasample.testutil.MainDispatcherRule
+import io.mockk.Runs
+import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.every
+import io.mockk.just
 import io.mockk.mockk
 import kotlinx.coroutines.flow.MutableStateFlow
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
@@ -98,5 +103,54 @@ class SampleDetailViewModelTest {
     @Test(expected = IllegalStateException::class)
     fun `sin id en la navegacion falla de inmediato`() {
         SampleDetailViewModel(SavedStateHandle(), repository)
+    }
+
+    // ---------- Cambio de estado de revisión ----------
+
+    @Test
+    fun `cambiar el estado lo guarda en el repositorio`() {
+        coEvery { repository.cambiarEstado(7, EstadoRevision.VALIDADO) } just Runs
+        val viewModel = crearViewModel()
+
+        viewModel.cambiarEstado(EstadoRevision.VALIDADO)
+
+        coVerify { repository.cambiarEstado(7, EstadoRevision.VALIDADO) }
+        assertNull(viewModel.uiState.value.errorEstado)
+    }
+
+    @Test
+    fun `elegir el estado actual no hace nada`() {
+        val viewModel = crearViewModel()
+        viewModel.cambiarEstado(EstadoRevision.OBSERVADO)
+        coVerify(exactly = 0) { repository.cambiarEstado(any(), any()) }
+    }
+
+    @Test
+    fun `no se puede validar sin choritos`() {
+        muestra.value = muestraDePrueba(id = 7, choritos = emptyList())
+        val viewModel = crearViewModel()
+
+        viewModel.cambiarEstado(EstadoRevision.VALIDADO)
+
+        assertEquals("No se puede validar una muestra sin choritos contados", viewModel.uiState.value.errorEstado)
+        coVerify(exactly = 0) { repository.cambiarEstado(any(), any()) }
+    }
+
+    @Test
+    fun `si falla el repositorio se avisa`() {
+        coEvery { repository.cambiarEstado(any(), any()) } throws IllegalStateException("bd")
+        val viewModel = crearViewModel()
+
+        viewModel.cambiarEstado(EstadoRevision.PENDIENTE)
+
+        assertEquals("No se pudo cambiar el estado", viewModel.uiState.value.errorEstado)
+    }
+
+    @Test
+    fun `una muestra que no existe no cambia de estado`() {
+        muestra.value = null
+        val viewModel = crearViewModel()
+        viewModel.cambiarEstado(EstadoRevision.VALIDADO)
+        coVerify(exactly = 0) { repository.cambiarEstado(any(), any()) }
     }
 }
