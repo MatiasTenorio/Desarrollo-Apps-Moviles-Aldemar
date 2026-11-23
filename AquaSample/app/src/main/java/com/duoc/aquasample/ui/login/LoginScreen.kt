@@ -1,5 +1,6 @@
 package com.duoc.aquasample.ui.login
 
+import com.duoc.aquasample.ui.components.SuperficieClara
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.ui.platform.testTag
 import androidx.compose.foundation.Image
@@ -123,150 +124,152 @@ private fun LoginContent(
     )
     val formaCampo = RoundedCornerShape(16.dp)
 
-    Box(modifier = Modifier.fillMaxSize().background(Color.White)) {
+    SuperficieClara {
+        Box(modifier = Modifier.fillMaxSize().background(Color.White)) {
 
-        // ---------- Mitad superior: degradado azul + logo ----------
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .fillMaxHeight(0.5f)
-                .background(
-                    Brush.verticalGradient(
-                        listOf(lerp(AldemarPrincipal, Color.Black, 0.25f), AldemarPrincipal)
-                    )
-                )
-        )
-        Column(
-            modifier = Modifier
-                .align(Alignment.TopCenter)
-                .padding(top = 64.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Image(
-                painter = painterResource(id = R.drawable.logo),
-                contentDescription = "Logo Aldemar",
-                contentScale = ContentScale.Crop,
-                modifier = Modifier.size(110.dp).clip(CircleShape)
-            )
-            Spacer(Modifier.height(12.dp))
-            Text(
-                text = "Aldemar",
-                color = Color.White,
-                fontSize = 40.sp,
-                fontWeight = FontWeight.Bold
-            )
-            Text(text = "Muestras", color = Color.White, fontSize = 20.sp)
-        }
-
-        // ---------- Mitad inferior: panel blanco con onda ----------
-        Column(
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .fillMaxWidth()
-                .fillMaxHeight(0.58f)
-                .background(Color.White, OndaSuperiorShape)
-                .verticalScroll(rememberScrollState())
-                .imePadding()
-                .padding(start = 24.dp, end = 24.dp, top = 56.dp, bottom = 24.dp)
-        ) {
-            Text(
-                text = "Bienvenido/a",
-                color = AldemarTexto,
-                fontSize = 26.sp,
-                fontWeight = FontWeight.Bold
-            )
-            Text(
-                text = "Inicia sesión para continuar",
-                color = AldemarTexto.copy(alpha = 0.6f),
-                fontSize = 14.sp
-            )
-
-            Spacer(Modifier.height(24.dp))
-
-            TextField(
-                value = state.usuario,
-                onValueChange = onUsuarioChange,
-                modifier = Modifier.fillMaxWidth().testTag("campo_usuario"),
-                placeholder = { Text("Correo") },
-                leadingIcon = { Icon(Icons.Default.Person, contentDescription = null) },
-                singleLine = true,
-                shape = formaCampo,
-                colors = campoColors,
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email, imeAction = ImeAction.Next)
-            )
-
-            Spacer(Modifier.height(16.dp))
-
-            TextField(
-                value = state.contrasena,
-                onValueChange = onContrasenaChange,
-                modifier = Modifier.fillMaxWidth().testTag("campo_contrasena"),
-                placeholder = { Text("Contraseña") },
-                leadingIcon = { Icon(Icons.Default.Lock, contentDescription = null) },
-                trailingIcon = {
-                    IconButton(onClick = onToggleVisible) {
-                        Icon(
-                            imageVector = if (state.contrasenaVisible)
-                                Icons.Default.Visibility else Icons.Default.VisibilityOff,
-                            contentDescription = if (state.contrasenaVisible)
-                                "Ocultar contraseña" else "Mostrar contraseña"
+            // ---------- Mitad superior: degradado azul + logo ----------
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .fillMaxHeight(0.5f)
+                    .background(
+                        Brush.verticalGradient(
+                            listOf(lerp(AldemarPrincipal, Color.Black, 0.25f), AldemarPrincipal)
                         )
-                    }
-                },
-                visualTransformation = if (state.contrasenaVisible)
-                    VisualTransformation.None else PasswordVisualTransformation(),
-                singleLine = true,
-                shape = formaCampo,
-                colors = campoColors,
-                keyboardOptions = KeyboardOptions(
-                    keyboardType = KeyboardType.Password,
-                    imeAction = ImeAction.Done
-                ),
-                keyboardActions = KeyboardActions(onDone = { onIniciarSesion() })
+                    )
             )
-
-            // Mensaje de error (solo si existe)
-            state.error?.let { mensaje ->
-                Spacer(Modifier.height(8.dp))
-                Text(
-                    text = mensaje,
-                    color = MaterialTheme.colorScheme.error,
-                    fontSize = 13.sp,
-                    modifier = Modifier.testTag("error_login")
+            Column(
+                modifier = Modifier
+                    .align(Alignment.TopCenter)
+                    .padding(top = 64.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Image(
+                    painter = painterResource(id = R.drawable.logo),
+                    contentDescription = "Logo Aldemar",
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.size(110.dp).clip(CircleShape)
                 )
+                Spacer(Modifier.height(12.dp))
+                Text(
+                    text = "Aldemar",
+                    color = Color.White,
+                    fontSize = 40.sp,
+                    fontWeight = FontWeight.Bold
+                )
+                Text(text = "Muestras", color = Color.White, fontSize = 20.sp)
             }
 
-            Spacer(Modifier.height(24.dp))
-
-            Button(
-                onClick = onIniciarSesion,
-                enabled = !state.cargando,
-                modifier = Modifier.fillMaxWidth().height(52.dp).testTag("boton_ingresar"),
-                shape = RoundedCornerShape(50),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = AldemarPrincipal,
-                    contentColor = Color.White
-                )
+            // ---------- Mitad inferior: panel blanco con onda ----------
+            Column(
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .fillMaxWidth()
+                    .fillMaxHeight(0.58f)
+                    .background(Color.White, OndaSuperiorShape)
+                    .verticalScroll(rememberScrollState())
+                    .imePadding()
+                    .padding(start = 24.dp, end = 24.dp, top = 56.dp, bottom = 24.dp)
             ) {
-                if (state.cargando) {
-                    CircularProgressIndicator(color = Color.White, strokeWidth = 2.dp, modifier = Modifier.size(22.dp))
-                } else {
-                    Text("Iniciar sesión", fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
+                Text(
+                    text = "Bienvenido/a",
+                    color = AldemarTexto,
+                    fontSize = 26.sp,
+                    fontWeight = FontWeight.Bold
+                )
+                Text(
+                    text = "Inicia sesión para continuar",
+                    color = AldemarTexto.copy(alpha = 0.6f),
+                    fontSize = 14.sp
+                )
+
+                Spacer(Modifier.height(24.dp))
+
+                TextField(
+                    value = state.usuario,
+                    onValueChange = onUsuarioChange,
+                    modifier = Modifier.fillMaxWidth().testTag("campo_usuario"),
+                    placeholder = { Text("Correo") },
+                    leadingIcon = { Icon(Icons.Default.Person, contentDescription = null) },
+                    singleLine = true,
+                    shape = formaCampo,
+                    colors = campoColors,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email, imeAction = ImeAction.Next)
+                )
+
+                Spacer(Modifier.height(16.dp))
+
+                TextField(
+                    value = state.contrasena,
+                    onValueChange = onContrasenaChange,
+                    modifier = Modifier.fillMaxWidth().testTag("campo_contrasena"),
+                    placeholder = { Text("Contraseña") },
+                    leadingIcon = { Icon(Icons.Default.Lock, contentDescription = null) },
+                    trailingIcon = {
+                        IconButton(onClick = onToggleVisible) {
+                            Icon(
+                                imageVector = if (state.contrasenaVisible)
+                                    Icons.Default.Visibility else Icons.Default.VisibilityOff,
+                                contentDescription = if (state.contrasenaVisible)
+                                    "Ocultar contraseña" else "Mostrar contraseña"
+                            )
+                        }
+                    },
+                    visualTransformation = if (state.contrasenaVisible)
+                        VisualTransformation.None else PasswordVisualTransformation(),
+                    singleLine = true,
+                    shape = formaCampo,
+                    colors = campoColors,
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Password,
+                        imeAction = ImeAction.Done
+                    ),
+                    keyboardActions = KeyboardActions(onDone = { onIniciarSesion() })
+                )
+
+                // Mensaje de error (solo si existe)
+                state.error?.let { mensaje ->
+                    Spacer(Modifier.height(8.dp))
+                    Text(
+                        text = mensaje,
+                        color = MaterialTheme.colorScheme.error,
+                        fontSize = 13.sp,
+                        modifier = Modifier.testTag("error_login")
+                    )
                 }
-            }
 
-            Spacer(Modifier.height(12.dp))
+                Spacer(Modifier.height(24.dp))
 
-            TextButton(
-                onClick = { /* TODO: pantalla de recuperación de contraseña */ },
-                modifier = Modifier.align(Alignment.CenterHorizontally)
-            ) {
-                Text(
-                    text = "¿Olvidaste tu contraseña?",
-                    color = AldemarPrincipal,
-                    fontSize = 14.sp,
-                    textAlign = TextAlign.Center
-                )
+                Button(
+                    onClick = onIniciarSesion,
+                    enabled = !state.cargando,
+                    modifier = Modifier.fillMaxWidth().height(52.dp).testTag("boton_ingresar"),
+                    shape = RoundedCornerShape(50),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = AldemarPrincipal,
+                        contentColor = Color.White
+                    )
+                ) {
+                    if (state.cargando) {
+                        CircularProgressIndicator(color = Color.White, strokeWidth = 2.dp, modifier = Modifier.size(22.dp))
+                    } else {
+                        Text("Iniciar sesión", fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
+                    }
+                }
+
+                Spacer(Modifier.height(12.dp))
+
+                TextButton(
+                    onClick = { /* TODO: pantalla de recuperación de contraseña */ },
+                    modifier = Modifier.align(Alignment.CenterHorizontally)
+                ) {
+                    Text(
+                        text = "¿Olvidaste tu contraseña?",
+                        color = AldemarPrincipal,
+                        fontSize = 14.sp,
+                        textAlign = TextAlign.Center
+                    )
+                }
             }
         }
     }

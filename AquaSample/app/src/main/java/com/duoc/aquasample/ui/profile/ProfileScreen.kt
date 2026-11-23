@@ -153,12 +153,12 @@ fun ProfileScreen(
             ) {
                 StatCard(
                     modifier = Modifier.weight(1f),
-                    label = "Muestras tomadas hoy",
+                    label = uiState.etiquetaHoy,
                     value = uiState.muestrasHoy.toString()
                 )
                 StatCard(
                     modifier = Modifier.weight(1f),
-                    label = "Muestras tomadas en total",
+                    label = uiState.etiquetaTotal,
                     value = uiState.muestrasTotales.toString()
                 )
             }

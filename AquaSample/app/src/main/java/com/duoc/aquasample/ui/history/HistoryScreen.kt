@@ -1,5 +1,8 @@
 package com.duoc.aquasample.ui.history
 
+import androidx.compose.ui.text.style.TextOverflow
+import com.duoc.aquasample.ui.components.SuperficieClara
+import com.duoc.aquasample.ui.theme.AldemarTexto
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
@@ -76,6 +79,8 @@ fun HistoryScreen(
     val busqueda by viewModel.busqueda.collectAsStateWithLifecycle()
     val filtro by viewModel.filtro.collectAsStateWithLifecycle()
     val resumen by viewModel.resumen.collectAsStateWithLifecycle()
+    val esAnalista by viewModel.soloValidadas.collectAsStateWithLifecycle()
+    val operadores by viewModel.operadores.collectAsStateWithLifecycle()
     var mostrarFiltros by rememberSaveable { mutableStateOf(false) }
 
     HistoryContent(
@@ -83,6 +88,8 @@ fun HistoryScreen(
         busqueda = busqueda,
         filtro = filtro,
         resumen = resumen,
+        esAnalista = esAnalista,
+        operadores = operadores,
         onBusquedaChange = viewModel::onBusquedaChange,
         onFiltroChange = viewModel::onFiltroChange,
         onLimpiarFiltros = viewModel::onLimpiarFiltros,
@@ -111,6 +118,8 @@ private fun HistoryContent(
     busqueda: String,
     filtro: FiltroHistorial,
     resumen: ResumenHistorial,
+    esAnalista: Boolean = false,
+    operadores: List<String> = emptyList(),
     onBusquedaChange: (String) -> Unit,
     onFiltroChange: (FiltroHistorial) -> Unit,
     onLimpiarFiltros: () -> Unit,
@@ -119,88 +128,106 @@ private fun HistoryContent(
     onSincronizar: () -> Unit,
     onMuestraClick: (Long) -> Unit
 ) {
-    Scaffold(
-        containerColor = FondoPantalla,
-        topBar = {
-            CenterAlignedTopAppBar(
-                title = {
-                    Text("Historial de muestras", fontWeight = FontWeight.Bold, fontSize = 18.sp)
-                },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")
-                    }
-                },
-                actions = {
-                    IconButton(onClick = onSincronizar) {
-                        Icon(Icons.Filled.Sync, contentDescription = "Sincronizar ahora")
-                    }
-                    IconButton(onClick = onFiltroClick) {
-                        BadgedBox(
-                            badge = {
-                                if (filtro.cantidadActivos > 0) {
-                                    Badge { Text(filtro.cantidadActivos.toString()) }
-                                }
-                            }
-                        ) {
-                            Icon(Icons.Filled.FilterAlt, contentDescription = "Filtrar")
+    // Pantalla de diseño claro (fondo celeste): se mantiene clara también en modo noche.
+    SuperficieClara {
+        Scaffold(
+            containerColor = FondoPantalla,
+            topBar = {
+                CenterAlignedTopAppBar(
+                    title = {
+                        Text(
+                            if (esAnalista) "Muestras validadas" else "Historial de muestras",
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 18.sp
+                        )
+                    },
+                    navigationIcon = {
+                        IconButton(onClick = onBack) {
+                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")
                         }
-                    }
-                },
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                    containerColor = AzulPrimario,
-                    titleContentColor = Color.White,
-                    navigationIconContentColor = Color.White,
-                    actionIconContentColor = Color.White
+                    },
+                    actions = {
+                        IconButton(onClick = onSincronizar) {
+                            Icon(Icons.Filled.Sync, contentDescription = "Sincronizar ahora")
+                        }
+                        IconButton(onClick = onFiltroClick) {
+                            BadgedBox(
+                                badge = {
+                                    if (filtro.cantidadActivos > 0) {
+                                        Badge { Text(filtro.cantidadActivos.toString()) }
+                                    }
+                                }
+                            ) {
+                                Icon(Icons.Filled.FilterAlt, contentDescription = "Filtrar")
+                            }
+                        }
+                    },
+                    colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                        containerColor = AzulPrimario,
+                        titleContentColor = Color.White,
+                        navigationIconContentColor = Color.White,
+                        actionIconContentColor = Color.White
+                    )
                 )
-            )
-        },
-    ) { innerPadding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-        ) {
-            BuscadorMuestras(
-                texto = busqueda,
-                onTextoChange = onBusquedaChange,
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)
-            )
+            },
+        ) { innerPadding ->
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding)
+            ) {
+                BuscadorMuestras(
+                    texto = busqueda,
+                    onTextoChange = onBusquedaChange,
+                    modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 4.dp)
+                )
 
-            if (filtro.cantidadActivos > 0) {
-                FiltrosActivos(
+                FiltrosRapidos(
                     filtro = filtro,
+                    esAnalista = esAnalista,
+                    operadores = operadores,
                     onCambiar = onFiltroChange,
-                    onLimpiar = onLimpiarFiltros,
                     modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 8.dp)
                 )
-            }
 
-            if (muestras.isNotEmpty()) {
-                ResumenCard(
-                    resumen = resumen,
-                    modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 12.dp)
-                )
-            }
-
-            if (muestras.isEmpty()) {
-                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text(
-                        if (busqueda.isBlank() && filtro.cantidadActivos == 0) "Aún no hay muestras registradas"
-                        else "No hay muestras con esos filtros",
-                        color = TextoSecundario
+                if (filtro.cantidadActivos > 0) {
+                    FiltrosActivos(
+                        filtro = filtro,
+                        onCambiar = onFiltroChange,
+                        onLimpiar = onLimpiarFiltros,
+                        modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 8.dp)
                     )
                 }
-            } else {
-                LazyColumn(
-                    contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 16.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    items(muestras, key = { it.id }) { muestra ->
-                        MuestraCard(
-                            muestra = muestra,
-                            onClick = { onMuestraClick(muestra.idInterno) }
+
+                if (muestras.isNotEmpty()) {
+                    ResumenCard(
+                        resumen = resumen,
+                        modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 12.dp)
+                    )
+                }
+
+                if (muestras.isEmpty()) {
+                    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        Text(
+                            if (busqueda.isBlank() && filtro.cantidadActivos == 0) {
+                                if (esAnalista) "Aún no hay muestras validadas" else "Aún no hay muestras registradas"
+                            }
+                            else "No hay muestras con esos filtros",
+                            color = TextoSecundario
                         )
+                    }
+                } else {
+                    LazyColumn(
+                        contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 16.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        items(muestras, key = { it.id }) { muestra ->
+                            MuestraCard(
+                                muestra = muestra,
+                                mostrarOperador = esAnalista,
+                                onClick = { onMuestraClick(muestra.idInterno) }
+                            )
+                        }
                     }
                 }
             }
@@ -226,7 +253,10 @@ private fun BuscadorMuestras(
             focusedContainerColor = Color.White,
             unfocusedContainerColor = Color(0xFFE6EEF8),
             focusedBorderColor = AzulPrimario,
-            unfocusedBorderColor = Color.Transparent
+            unfocusedBorderColor = Color.Transparent,
+            focusedTextColor = TextoPrincipal,
+            unfocusedTextColor = TextoPrincipal,
+            cursorColor = AzulPrimario
         )
     )
 }
@@ -234,6 +264,7 @@ private fun BuscadorMuestras(
 @Composable
 private fun MuestraCard(
     muestra: MuestraItem,
+    mostrarOperador: Boolean,
     onClick: () -> Unit
 ) {
     Card(
@@ -241,7 +272,7 @@ private fun MuestraCard(
             .fillMaxWidth()
             .clickable(onClick = onClick),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = Color.White, contentColor = AldemarTexto),
         border = BorderStroke(1.dp, BordeTarjeta),
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
     ) {
@@ -279,10 +310,20 @@ private fun MuestraCard(
                     color = TextoSecundario
                 )
                 Text(
-                    text = "${muestra.cantidadChoritos} choritos",
+                    text = "${muestra.cantidadChoritos} choritos  •  ${muestra.estado}",
                     fontSize = 14.sp,
                     color = TextoSecundario
                 )
+                // El Analista ve muestras de todos: le sirve saber quién la tomó.
+                if (mostrarOperador && muestra.operador.isNotBlank()) {
+                    Text(
+                        text = muestra.operador,
+                        fontSize = 12.sp,
+                        color = TextoSecundario,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
             }
 
             Icon(

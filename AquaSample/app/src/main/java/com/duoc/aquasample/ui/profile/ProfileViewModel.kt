@@ -1,5 +1,6 @@
 package com.duoc.aquasample.ui.profile
 
+import com.duoc.aquasample.data.model.EstadoRevision
 import android.content.Context
 import android.graphics.BitmapFactory
 import android.net.Uri
@@ -32,8 +33,13 @@ data class ProfileUiState(
     val foto: ImageBitmap? = null,
     val cargandoFoto: Boolean = false,
     val muestrasHoy: Int = 0,
-    val muestrasTotales: Int = 0
-)
+    val muestrasTotales: Int = 0,
+    /** El Analista no toma muestras: sus tarjetas muestran lo que revisa. */
+    val esAnalista: Boolean = false
+) {
+    val etiquetaHoy: String get() = if (esAnalista) "Muestras validadas" else "Muestras tomadas hoy"
+    val etiquetaTotal: String get() = if (esAnalista) "Operadores con registros" else "Muestras tomadas en total"
+}
 
 internal fun Rol.etiqueta(): String = when (this) {
     Rol.OPERADOR -> "Operador"
@@ -49,6 +55,12 @@ internal fun contarMuestrasDe(
     if (operador == null) return 0 to 0
     val propias = muestras.filter { it.operador == operador }
     return propias.count { it.fechaHora.toLocalDate() == hoy } to propias.size
+}
+
+/** Para el Analista: (muestras validadas de todos, operadores distintos con muestras validadas). */
+internal fun contarParaAnalista(muestras: List<Muestra>): Pair<Int, Int> {
+    val validadas = muestras.filter { it.estado == EstadoRevision.VALIDADO }
+    return validadas.size to validadas.map { it.operador }.filter { it.isNotBlank() }.distinct().size
 }
 
 /**
@@ -70,13 +82,17 @@ class ProfileViewModel(
             combine(sesion.usuario, repository.observarMuestras()) { usuario, muestras ->
                 usuario to muestras
             }.collect { (usuario, muestras) ->
-                val (deHoy, total) = contarMuestrasDe(usuario?.correo, muestras, hoy())
+                val esAnalista = usuario?.rol == Rol.ANALISTA
+                val (deHoy, total) =
+                    if (esAnalista) contarParaAnalista(muestras)
+                    else contarMuestrasDe(usuario?.correo, muestras, hoy())
                 _uiState.update {
                     it.copy(
                         nombreUsuario = usuario?.nombreUsuario.orEmpty(),
                         rol = usuario?.rol?.etiqueta().orEmpty(),
                         muestrasHoy = deHoy,
-                        muestrasTotales = total
+                        muestrasTotales = total,
+                        esAnalista = esAnalista
                     )
                 }
             }

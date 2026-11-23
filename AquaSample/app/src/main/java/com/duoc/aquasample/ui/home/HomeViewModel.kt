@@ -26,7 +26,10 @@ data class HomeUiState(
     val userName: String = "Usuario",
     /** false para el Analista: no ve la opción "Nueva muestra". */
     val puedeRegistrar: Boolean = false
-)
+) {
+    val subtituloHistorial: String
+        get() = if (puedeRegistrar) "Revisa y valida tus muestras" else "Revisa las muestras validadas de todos los operadores"
+}
 
 internal fun Usuario?.aHomeUiState(): HomeUiState = HomeUiState(
     userName = this?.nombreUsuario ?: "Usuario",

@@ -175,4 +175,20 @@ class SampleDetailViewModelTest {
     fun `el operador si puede`() {
         assertTrue(crearViewModel().uiState.value.puedeCambiarEstado)
     }
+
+    @Test
+    fun `el operador puede editar una muestra no validada`() {
+        assertTrue(crearViewModel(Rol.OPERADOR).uiState.value.puedeEditar)
+    }
+
+    @Test
+    fun `una muestra validada queda cerrada para editar`() {
+        muestra.value = muestra.value?.copy(estado = EstadoRevision.VALIDADO)
+        assertFalse(crearViewModel(Rol.OPERADOR).uiState.value.puedeEditar)
+    }
+
+    @Test
+    fun `el analista no edita`() {
+        assertFalse(crearViewModel(Rol.ANALISTA).uiState.value.puedeEditar)
+    }
 }

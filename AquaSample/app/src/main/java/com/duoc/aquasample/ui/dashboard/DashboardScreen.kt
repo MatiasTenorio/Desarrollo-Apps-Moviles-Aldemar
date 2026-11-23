@@ -1,5 +1,7 @@
 package com.duoc.aquasample.ui.dashboard
 
+import com.duoc.aquasample.ui.components.SuperficieClara
+import com.duoc.aquasample.ui.theme.AldemarTexto
 import android.content.Intent
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -181,9 +183,11 @@ private fun TarjetaGrafico(contenido: @Composable () -> Unit) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = Color.White, contentColor = AldemarTexto),
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
     ) {
-        Column(modifier = Modifier.padding(16.dp)) { contenido() }
+        SuperficieClara {
+            Column(modifier = Modifier.padding(16.dp)) { contenido() }
+        }
     }
 }

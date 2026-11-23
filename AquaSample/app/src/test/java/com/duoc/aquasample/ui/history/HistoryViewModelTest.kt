@@ -1,6 +1,10 @@
 package com.duoc.aquasample.ui.history
 
 import com.duoc.aquasample.data.model.Chorito
+import com.duoc.aquasample.data.model.EstadoRevision
+import com.duoc.aquasample.data.model.Rol
+import com.duoc.aquasample.data.model.Usuario
+import com.duoc.aquasample.data.repository.SesionRepository
 import com.duoc.aquasample.data.model.FiltroMuestras
 import com.duoc.aquasample.data.model.Muestra
 import com.duoc.aquasample.data.model.muestraDePrueba
@@ -186,5 +190,62 @@ class HistoryViewModelTest {
         val sinMedir = listOf(muestraDePrueba(id = 1, choritos = listOf(Chorito(numero = 1))))
         assertNull(sinMedir.resumen().tamanoPromedioCm)
         assertEquals(1.0, sinMedir.resumen().promedioChoritosPorMuestra!!, 0.0001)
+    }
+
+    // --- Roles y filtros por operador / estado ---
+
+    private val variosOperadores = listOf(
+        muestraDePrueba(id = 1).copy(operador = "op1@aldemar.cl", estado = EstadoRevision.VALIDADO),
+        muestraDePrueba(id = 2).copy(operador = "op2@aldemar.cl", estado = EstadoRevision.VALIDADO),
+        muestraDePrueba(id = 3).copy(operador = "op1@aldemar.cl", estado = EstadoRevision.PENDIENTE)
+    )
+
+    private fun sesionCon(rol: Rol) =
+        SesionRepository().apply { iniciar(Usuario("u", "", rol, "u@aldemar.cl")) }
+
+    @Test
+    fun `el analista ve solo las validadas de todos los operadores`() = runTest {
+        datos.value = variosOperadores
+        val viewModel = HistoryViewModel(repository, sesion = sesionCon(Rol.ANALISTA))
+        escuchar(viewModel)
+
+        assertTrue(viewModel.soloValidadas.value)
+        assertEquals(listOf("#0001", "#0002"), viewModel.muestras.value.map { it.id })
+    }
+
+    @Test
+    fun `el operador ve todas y puede filtrar por estado`() = runTest {
+        datos.value = variosOperadores
+        val viewModel = HistoryViewModel(repository, sesion = sesionCon(Rol.OPERADOR))
+        escuchar(viewModel)
+        assertEquals(3, viewModel.muestras.value.size)
+
+        viewModel.onFiltroChange(FiltroHistorial(estado = EstadoRevision.PENDIENTE))
+
+        assertEquals(listOf("#0003"), viewModel.muestras.value.map { it.id })
+    }
+
+    @Test
+    fun `filtra por operador y lista los operadores sin repetir`() = runTest {
+        datos.value = variosOperadores
+        val viewModel = HistoryViewModel(repository, sesion = sesionCon(Rol.ANALISTA))
+        escuchar(viewModel)
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { viewModel.operadores.collect {} }
+
+        assertEquals(listOf("op1@aldemar.cl", "op2@aldemar.cl"), viewModel.operadores.value)
+
+        viewModel.onFiltroChange(FiltroHistorial(operador = "op2@aldemar.cl"))
+
+        assertEquals(listOf("#0002"), viewModel.muestras.value.map { it.id })
+        assertEquals("op2@aldemar.cl", viewModel.muestras.value.single().operador)
+    }
+
+    @Test
+    fun `operador y estado cuentan como filtros activos`() {
+        val filtro = FiltroHistorial(operador = "op1@aldemar.cl", estado = EstadoRevision.VALIDADO)
+        assertEquals(2, filtro.cantidadActivos)
+        assertTrue(filtro.cumple(variosOperadores[0]))
+        assertTrue(!filtro.cumple(variosOperadores[1]))
+        assertTrue(!filtro.cumple(variosOperadores[2]))
     }
 }

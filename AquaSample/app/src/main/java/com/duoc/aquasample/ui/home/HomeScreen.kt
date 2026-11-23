@@ -1,5 +1,8 @@
 package com.duoc.aquasample.ui.home
 
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -136,13 +139,14 @@ fun HomeScreen(
                     onClick = onNavigateToNewSample,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(120.dp),
+                        .heightIn(min = 120.dp),
                     shape = RoundedCornerShape(16.dp),
                     colors = CardDefaults.cardColors(containerColor = AldemarPrincipal)
                 ) {
                     Row(
                         modifier = Modifier
-                            .fillMaxSize()
+                            .fillMaxWidth()
+                            .heightIn(min = 120.dp)
                             .padding(16.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
@@ -170,7 +174,7 @@ fun HomeScreen(
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(16.dp),
-                    colors = CardDefaults.cardColors(containerColor = AldemarSecundario)
+                    colors = CardDefaults.cardColors(containerColor = AldemarSecundario, contentColor = AldemarTexto)
                 ) {
                     Text(
                         "Rol Analista: consulta del historial, el dashboard y los reportes. " +
@@ -185,22 +189,26 @@ fun HomeScreen(
             Spacer(modifier = Modifier.height(16.dp))
 
             // Fila: Historial + Perfil
+            // IntrinsicSize.Min: las dos tarjetas crecen juntas hasta el alto de la más alta,
+            // así el texto nunca se corta aunque el teléfono use letra grande.
             Row(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(IntrinsicSize.Min),
                 horizontalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 HomeSecondaryCard(
                     modifier = Modifier.weight(1f),
                     icon = Icons.Default.ListAlt,
                     title = "Historial",
-                    subtitle = "Revisa tus muestras registradas",
+                    subtitle = uiState.subtituloHistorial,
                     onClick = onNavigateToHistory
                 )
                 HomeSecondaryCard(
                     modifier = Modifier.weight(1f),
                     icon = Icons.Default.Person,
                     title = "Perfil",
-                    subtitle = "Gestiona tu cuenta y preferencias",
+                    subtitle = "Tu cuenta y tus estadísticas",
                     onClick = onNavigateToProfile
                 )
             }
@@ -212,7 +220,7 @@ fun HomeScreen(
                 onClick = onNavigateToDashboard,
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = AldemarSecundario)
+                colors = CardDefaults.cardColors(containerColor = AldemarSecundario, contentColor = AldemarTexto)
             ) {
                 Row(
                     modifier = Modifier.padding(16.dp),
@@ -250,13 +258,15 @@ private fun HomeSecondaryCard(
 ) {
     Card(
         onClick = onClick,
-        modifier = modifier.height(150.dp),
+        modifier = modifier
+            .fillMaxHeight()
+            .heightIn(min = 150.dp),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = AldemarSecundario)
+        colors = CardDefaults.cardColors(containerColor = AldemarSecundario, contentColor = AldemarTexto)
     ) {
         Column(
             modifier = Modifier
-                .fillMaxSize()
+                .fillMaxWidth()
                 .padding(16.dp),
             verticalArrangement = Arrangement.Center
         ) {
@@ -264,7 +274,7 @@ private fun HomeSecondaryCard(
             Spacer(modifier = Modifier.height(8.dp))
             Text(title, fontWeight = FontWeight.Bold, color = AldemarTexto)
             Spacer(modifier = Modifier.height(4.dp))
-            Text(subtitle, fontSize = 12.sp, color = Color.Gray)
+            Text(subtitle, fontSize = 12.sp, color = Color.DarkGray)
         }
     }
 }

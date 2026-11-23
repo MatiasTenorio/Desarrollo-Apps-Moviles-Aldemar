@@ -1,5 +1,7 @@
 package com.duoc.aquasample.ui.newSample
 
+import com.duoc.aquasample.ui.components.SuperficieClara
+import com.duoc.aquasample.ui.theme.AldemarTexto
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -264,36 +266,38 @@ private fun MedicionCard(
 ) {
     Card(
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = AldemarSecundario),
+        colors = CardDefaults.cardColors(containerColor = AldemarSecundario, contentColor = AldemarTexto),
         modifier = Modifier.fillMaxWidth()
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Column(modifier = Modifier.weight(1f)) {
-                    Text("Tamaño por chorito", fontWeight = FontWeight.Bold)
-                    Text("Opcional · $medidos de $total medidos", fontSize = 12.sp, color = Color.DarkGray)
+        SuperficieClara {
+            Column(modifier = Modifier.padding(16.dp)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text("Tamaño por chorito", fontWeight = FontWeight.Bold)
+                        Text("Opcional · $medidos de $total medidos", fontSize = 12.sp, color = Color.DarkGray)
+                    }
+                    NavegadorChoritos(
+                        actual = numero,
+                        total = total,
+                        puedeRetroceder = puedeRetroceder,
+                        puedeAvanzar = puedeAvanzar,
+                        onAnterior = onAnterior,
+                        onSiguiente = onSiguiente
+                    )
                 }
-                NavegadorChoritos(
-                    actual = numero,
-                    total = total,
-                    puedeRetroceder = puedeRetroceder,
-                    puedeAvanzar = puedeAvanzar,
-                    onAnterior = onAnterior,
-                    onSiguiente = onSiguiente
+                Spacer(modifier = Modifier.height(12.dp))
+                OutlinedTextField(
+                    value = tamano,
+                    onValueChange = onTamanoChange,
+                    label = { Text("Tamaño del chorito N° $numero (cm)") },
+                    placeholder = { Text("Ej: 5,4") },
+                    singleLine = true,
+                    trailingIcon = { Icon(Icons.Filled.Straighten, contentDescription = null) },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                    shape = RoundedCornerShape(12.dp),
+                    modifier = Modifier.fillMaxWidth()
                 )
             }
-            Spacer(modifier = Modifier.height(12.dp))
-            OutlinedTextField(
-                value = tamano,
-                onValueChange = onTamanoChange,
-                label = { Text("Tamaño del chorito N° $numero (cm)") },
-                placeholder = { Text("Ej: 5,4") },
-                singleLine = true,
-                trailingIcon = { Icon(Icons.Filled.Straighten, contentDescription = null) },
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                shape = RoundedCornerShape(12.dp),
-                modifier = Modifier.fillMaxWidth()
-            )
         }
     }
 }

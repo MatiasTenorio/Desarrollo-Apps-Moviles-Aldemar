@@ -1,5 +1,6 @@
 package com.duoc.aquasample.ui.home
 
+import com.duoc.aquasample.ui.components.SuperficieClara
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -55,37 +56,39 @@ fun CondicionesMarCard(
             .fillMaxWidth()
             .testTag("tarjeta_clima"),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = Color.White, contentColor = AldemarTexto),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(Icons.Filled.Waves, contentDescription = null, tint = AldemarPrincipal)
-                Spacer(modifier = Modifier.size(8.dp))
-                Text(
-                    "Condiciones del mar",
-                    fontWeight = FontWeight.Bold,
-                    color = AldemarTexto,
-                    modifier = Modifier.weight(1f)
-                )
-                IconButton(onClick = onReintentar) {
-                    Icon(Icons.Filled.Refresh, contentDescription = "Actualizar condiciones del mar")
+        SuperficieClara {
+            Column(modifier = Modifier.padding(16.dp)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Filled.Waves, contentDescription = null, tint = AldemarPrincipal)
+                    Spacer(modifier = Modifier.size(8.dp))
+                    Text(
+                        "Condiciones del mar",
+                        fontWeight = FontWeight.Bold,
+                        color = AldemarTexto,
+                        modifier = Modifier.weight(1f)
+                    )
+                    IconButton(onClick = onReintentar) {
+                        Icon(Icons.Filled.Refresh, contentDescription = "Actualizar condiciones del mar")
+                    }
                 }
-            }
 
-            SelectorDesplegable(
-                etiqueta = "Centro",
-                opciones = centros,
-                seleccionada = centro,
-                onSeleccion = onCentroSeleccionado
-            )
+                SelectorDesplegable(
+                    etiqueta = "Centro",
+                    opciones = centros,
+                    seleccionada = centro,
+                    onSeleccion = onCentroSeleccionado
+                )
 
-            Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(12.dp))
 
-            when (estado) {
-                ClimaUiState.Cargando -> CircularProgressIndicator(modifier = Modifier.size(24.dp))
-                is ClimaUiState.Error -> Text(estado.mensaje, color = Color.Gray, fontSize = 13.sp)
-                is ClimaUiState.Listo -> DatosMar(estado.condiciones)
+                when (estado) {
+                    ClimaUiState.Cargando -> CircularProgressIndicator(modifier = Modifier.size(24.dp))
+                    is ClimaUiState.Error -> Text(estado.mensaje, color = Color.Gray, fontSize = 13.sp)
+                    is ClimaUiState.Listo -> DatosMar(estado.condiciones)
+                }
             }
         }
     }

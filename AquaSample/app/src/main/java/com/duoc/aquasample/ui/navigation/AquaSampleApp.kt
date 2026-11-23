@@ -1,5 +1,6 @@
 package com.duoc.aquasample.ui.navigation
 
+import com.duoc.aquasample.ui.editarmuestra.EditarMuestraScreen
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.padding
@@ -175,8 +176,21 @@ fun AquaSampleApp() {
                 arguments = listOf(
                     navArgument(SampleDetailViewModel.ARG_MUESTRA_ID) { type = NavType.LongType }
                 )
+            ) { entry ->
+                val muestraId = entry.arguments?.getLong(SampleDetailViewModel.ARG_MUESTRA_ID) ?: 0L
+                SampleDetailScreen(
+                    onBack = { navController.popBackStack() },
+                    onEditar = { navController.navigate(Screen.EditarMuestra.crearRuta(muestraId)) }
+                )
+            }
+
+            composable(
+                route = Screen.EditarMuestra.route,
+                arguments = listOf(
+                    navArgument(SampleDetailViewModel.ARG_MUESTRA_ID) { type = NavType.LongType }
+                )
             ) {
-                SampleDetailScreen(onBack = { navController.popBackStack() })
+                EditarMuestraScreen(onVolver = { navController.popBackStack() })
             }
 
             composable(Screen.Dashboard.route) {

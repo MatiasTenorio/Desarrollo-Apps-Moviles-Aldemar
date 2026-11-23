@@ -130,7 +130,7 @@ fun SampleDetailScreen(
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = AldemarSecundario)
+                colors = CardDefaults.cardColors(containerColor = AldemarSecundario, contentColor = AldemarTexto)
             ) {
                 Row(
                     modifier = Modifier
@@ -288,6 +288,7 @@ fun SampleDetailScreen(
                 }
                 Button(
                     onClick = onEditar,
+                    enabled = uiState.puedeEditar,
                     colors = ButtonDefaults.buttonColors(containerColor = AldemarPrincipal),
                     modifier = Modifier
                         .weight(1f)
@@ -295,6 +296,15 @@ fun SampleDetailScreen(
                 ) {
                     Text("Editar")
                 }
+            }
+            if (!uiState.cargando && !uiState.puedeEditar) {
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    if (uiState.puedeCambiarEstado) "Muestra validada: cámbiala a Observado para editarla."
+                    else "Solo el Operador puede editar muestras.",
+                    fontSize = 12.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             }
         }
     }
@@ -344,7 +354,7 @@ private fun DetailCard(modifier: Modifier = Modifier, label: String, value: Stri
     Card(
         modifier = modifier,
         shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFFF5F5F5))
+        colors = CardDefaults.cardColors(containerColor = Color(0xFFF5F5F5), contentColor = AldemarTexto)
     ) {
         Column(modifier = Modifier.padding(12.dp)) {
             Text(label, style = MaterialTheme.typography.bodySmall, color = Color.DarkGray)
@@ -365,7 +375,7 @@ private fun MedicionRow(medicion: ChoritoMedicion) {
     ) {
         Text("Chorito ${medicion.numero}")
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Text("${medicion.tamanoCm} cm", color = Color.DarkGray)
+            Text("%.1f cm".format(java.util.Locale.forLanguageTag("es-CL"), medicion.tamanoCm), color = MaterialTheme.colorScheme.onSurfaceVariant)
             Icon(
                 Icons.Filled.ChevronRight,
                 contentDescription = null,

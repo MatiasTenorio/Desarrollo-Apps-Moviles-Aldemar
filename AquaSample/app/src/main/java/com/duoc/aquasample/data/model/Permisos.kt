@@ -12,4 +12,11 @@ object Permisos {
     fun puedeRegistrarMuestras(rol: Rol?): Boolean = rol == Rol.OPERADOR
 
     fun puedeCambiarEstado(rol: Rol?): Boolean = rol == Rol.OPERADOR
+
+    /** Una muestra validada queda cerrada: para corregirla, el Operador primero la cambia a Observado. */
+    fun puedeEditar(rol: Rol?, estado: EstadoRevision): Boolean =
+        rol == Rol.OPERADOR && estado != EstadoRevision.VALIDADO
+
+    /** El Analista revisa los registros validados de todos los operadores. */
+    fun veSoloValidadas(rol: Rol?): Boolean = rol == Rol.ANALISTA
 }

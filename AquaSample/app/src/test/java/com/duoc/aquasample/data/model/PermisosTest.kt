@@ -23,4 +23,20 @@ class PermisosTest {
         assertFalse(Permisos.puedeRegistrarMuestras(null))
         assertFalse(Permisos.puedeCambiarEstado(null))
     }
+
+    @Test
+    fun `solo el operador edita y solo si no esta validada`() {
+        assertTrue(Permisos.puedeEditar(Rol.OPERADOR, EstadoRevision.PENDIENTE))
+        assertTrue(Permisos.puedeEditar(Rol.OPERADOR, EstadoRevision.OBSERVADO))
+        assertFalse(Permisos.puedeEditar(Rol.OPERADOR, EstadoRevision.VALIDADO))
+        assertFalse(Permisos.puedeEditar(Rol.ANALISTA, EstadoRevision.PENDIENTE))
+        assertFalse(Permisos.puedeEditar(null, EstadoRevision.PENDIENTE))
+    }
+
+    @Test
+    fun `el analista ve solo validadas`() {
+        assertTrue(Permisos.veSoloValidadas(Rol.ANALISTA))
+        assertFalse(Permisos.veSoloValidadas(Rol.OPERADOR))
+        assertFalse(Permisos.veSoloValidadas(null))
+    }
 }

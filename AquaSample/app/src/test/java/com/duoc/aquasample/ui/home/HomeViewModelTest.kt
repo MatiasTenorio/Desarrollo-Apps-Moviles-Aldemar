@@ -93,4 +93,13 @@ class HomeViewModelTest {
         sesion.iniciar(Usuario("a", "", Rol.ANALISTA))
         assertFalse(viewModel.uiState.value.puedeRegistrar)
     }
+
+    @Test
+    fun `el subtitulo del historial depende del rol`() {
+        assertEquals("Revisa y valida tus muestras", HomeUiState(puedeRegistrar = true).subtituloHistorial)
+        assertEquals(
+            "Revisa las muestras validadas de todos los operadores",
+            HomeUiState(puedeRegistrar = false).subtituloHistorial
+        )
+    }
 }

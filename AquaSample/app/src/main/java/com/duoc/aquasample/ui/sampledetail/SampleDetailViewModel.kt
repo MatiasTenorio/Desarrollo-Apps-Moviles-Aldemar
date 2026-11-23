@@ -48,7 +48,9 @@ data class SampleDetailUiState(
     val mostrarTodasLasMediciones: Boolean = false,
     val errorEstado: String? = null,
     /** Solo el Operador revisa y valida; el Analista ve los botones deshabilitados. */
-    val puedeCambiarEstado: Boolean = false
+    val puedeCambiarEstado: Boolean = false,
+    /** Operador y muestra no validada (una validada está cerrada). */
+    val puedeEditar: Boolean = false
 ) {
     val medicionesVisibles: List<ChoritoMedicion>
         get() = if (mostrarTodasLasMediciones) mediciones else mediciones.take(5)
@@ -112,6 +114,7 @@ class SampleDetailViewModel(
                         estado.copy(cargando = false, noEncontrada = true)
                     } else {
                         estado.conMuestra(muestra)
+                            .copy(puedeEditar = Permisos.puedeEditar(sesion.usuario.value?.rol, muestra.estado))
                     }
                 }
             }

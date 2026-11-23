@@ -1,5 +1,12 @@
 package com.duoc.aquasample.ui.history
 
+import com.duoc.aquasample.data.model.EstadoRevision
+import androidx.compose.ui.platform.testTag
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.foundation.layout.Box
+import com.duoc.aquasample.ui.theme.AldemarTexto
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -151,6 +158,8 @@ fun FiltrosActivos(
         filtro.centro?.let { ChipQuitable(it) { onCambiar(filtro.copy(centro = null)) } }
         filtro.tren?.let { ChipQuitable(it) { onCambiar(filtro.copy(tren = null)) } }
         filtro.linea?.let { ChipQuitable("Línea $it") { onCambiar(filtro.copy(linea = null)) } }
+        filtro.operador?.let { ChipQuitable(it) { onCambiar(filtro.copy(operador = null)) } }
+        filtro.estado?.let { ChipQuitable(it.etiqueta) { onCambiar(filtro.copy(estado = null)) } }
         if (filtro.periodo != Periodo.TODO) {
             ChipQuitable(filtro.periodo.etiqueta) { onCambiar(filtro.copy(periodo = Periodo.TODO)) }
         }
@@ -173,7 +182,7 @@ fun ResumenCard(resumen: ResumenHistorial, modifier: Modifier = Modifier) {
     Card(
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = AldemarSecundario)
+        colors = CardDefaults.cardColors(containerColor = AldemarSecundario, contentColor = AldemarTexto)
     ) {
         Row(
             modifier = Modifier
@@ -199,5 +208,84 @@ private fun DatoResumen(valor: String, etiqueta: String) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Text(valor, fontWeight = FontWeight.Bold, fontSize = 18.sp)
         Text(etiqueta, fontSize = 12.sp, color = Color.DarkGray)
+    }
+}
+
+/**
+ * Filtros a la vista bajo el buscador: centro, tren y línea para todos, más
+ * operador (Analista, que revisa a todos los operadores) o estado (Operador,
+ * que valida sus muestras). Cada chip abre un menú; el período sigue en la hoja.
+ */
+@Composable
+fun FiltrosRapidos(
+    filtro: FiltroHistorial,
+    esAnalista: Boolean,
+    operadores: List<String>,
+    onCambiar: (FiltroHistorial) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        modifier = modifier.horizontalScroll(rememberScrollState()),
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        ChipMenu(
+            titulo = "Centro",
+            valor = filtro.centro,
+            opciones = Catalogos.centros,
+            onElegir = { onCambiar(filtro.copy(centro = it)) }
+        )
+        ChipMenu(
+            titulo = "Tren",
+            valor = filtro.tren,
+            opciones = Catalogos.trenes,
+            onElegir = { onCambiar(filtro.copy(tren = it)) }
+        )
+        ChipMenu(
+            titulo = "Línea",
+            valor = filtro.linea?.let { "Línea $it" },
+            opciones = Catalogos.lineas.map { "Línea $it" },
+            onElegir = { elegido -> onCambiar(filtro.copy(linea = elegido?.removePrefix("Línea ")?.toIntOrNull())) }
+        )
+        if (esAnalista) {
+            ChipMenu(
+                titulo = "Operador",
+                valor = filtro.operador,
+                opciones = operadores,
+                onElegir = { onCambiar(filtro.copy(operador = it)) }
+            )
+        } else {
+            ChipMenu(
+                titulo = "Estado",
+                valor = filtro.estado?.etiqueta,
+                opciones = EstadoRevision.entries.map { it.etiqueta },
+                onElegir = { elegido -> onCambiar(filtro.copy(estado = EstadoRevision.entries.firstOrNull { it.etiqueta == elegido })) }
+            )
+        }
+    }
+}
+
+/** Chip que muestra el valor elegido (o el título) y abre un menú con "Todos" + opciones. */
+@Composable
+private fun ChipMenu(
+    titulo: String,
+    valor: String?,
+    opciones: List<String>,
+    onElegir: (String?) -> Unit
+) {
+    var abierto by remember { mutableStateOf(false) }
+    Box {
+        FilterChip(
+            selected = valor != null,
+            onClick = { abierto = true },
+            label = { Text(valor ?: titulo, maxLines = 1) },
+            trailingIcon = { Icon(Icons.Filled.ArrowDropDown, contentDescription = null, modifier = Modifier.size(18.dp)) },
+            modifier = Modifier.testTag("filtro_${titulo.lowercase(LOCALE_CL)}")
+        )
+        DropdownMenu(expanded = abierto, onDismissRequest = { abierto = false }) {
+            DropdownMenuItem(text = { Text(TODOS) }, onClick = { abierto = false; onElegir(null) })
+            opciones.forEach { opcion ->
+                DropdownMenuItem(text = { Text(opcion) }, onClick = { abierto = false; onElegir(opcion) })
+            }
+        }
     }
 }

@@ -35,7 +35,7 @@ fun StatCard(
     Card(
         modifier = modifier,
         shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = AldemarSecundario)
+        colors = CardDefaults.cardColors(containerColor = AldemarSecundario, contentColor = AldemarTexto)
     ) {
         Column(modifier = Modifier.padding(12.dp)) {
             Text(label, style = MaterialTheme.typography.bodySmall, color = Color.DarkGray)

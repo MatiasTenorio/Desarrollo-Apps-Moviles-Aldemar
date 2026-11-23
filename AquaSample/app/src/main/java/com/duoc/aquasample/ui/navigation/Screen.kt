@@ -19,6 +19,10 @@ sealed class Screen(val route: String) {
         fun crearRuta(muestraId: Long): String = "sample_detail/$muestraId"
     }
 
+    data object EditarMuestra : Screen("editar_muestra/{${SampleDetailViewModel.ARG_MUESTRA_ID}}") {
+        fun crearRuta(muestraId: Long): String = "editar_muestra/$muestraId"
+    }
+
     data object Profile : Screen("profile")
     data object Dashboard : Screen("dashboard")
 }

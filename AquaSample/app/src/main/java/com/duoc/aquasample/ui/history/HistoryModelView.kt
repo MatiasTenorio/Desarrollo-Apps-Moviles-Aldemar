@@ -5,7 +5,10 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
+import com.duoc.aquasample.data.model.EstadoRevision
 import com.duoc.aquasample.data.model.EstadoSync
+import com.duoc.aquasample.data.model.Permisos
+import com.duoc.aquasample.data.repository.SesionRepository
 import com.duoc.aquasample.data.model.FiltroMuestras
 import com.duoc.aquasample.data.model.Muestra
 import com.duoc.aquasample.data.repository.MuestraRepository
@@ -31,6 +34,8 @@ data class MuestraItem(
     val linea: Int,          // 2
     val cantidadChoritos: Int,
     val fotoPath: String? = null,
+    val operador: String = "",
+    val estado: String = "",
     /** true si ya llegó al backend; false si sigue solo en el teléfono. */
     val sincronizada: Boolean = false
 )
@@ -50,10 +55,17 @@ data class FiltroHistorial(
     val centro: String? = null,
     val tren: String? = null,
     val linea: Int? = null,
-    val periodo: Periodo = Periodo.TODO
+    val periodo: Periodo = Periodo.TODO,
+    /** Correo del operador que tomó la muestra. */
+    val operador: String? = null,
+    val estado: EstadoRevision? = null
 ) {
     val cantidadActivos: Int
-        get() = listOfNotNull(centro, tren, linea, periodo.takeIf { it != Periodo.TODO }).size
+        get() = listOfNotNull(centro, tren, linea, periodo.takeIf { it != Periodo.TODO }, operador, estado).size
+
+    /** Operador y estado se filtran en memoria (centro, tren, línea y período van en la consulta de Room). */
+    fun cumple(muestra: Muestra): Boolean =
+        (operador == null || muestra.operador == operador) && (estado == null || muestra.estado == estado)
 
     /** Traduce el filtro de pantalla a la consulta de Room. */
     fun aFiltroMuestras(hoy: LocalDate): FiltroMuestras = FiltroMuestras(
@@ -97,6 +109,8 @@ internal fun Muestra.aItemHistorial(): MuestraItem = MuestraItem(
     linea = linea,
     cantidadChoritos = cantidadChoritos,
     fotoPath = fotoPath,
+    operador = operador,
+    estado = estado.etiqueta,
     sincronizada = estadoSync == EstadoSync.SINCRONIZADO
 )
 
@@ -121,6 +135,7 @@ internal fun List<MuestraItem>.filtrarPorTexto(texto: String): List<MuestraItem>
 @OptIn(ExperimentalCoroutinesApi::class)
 class HistoryViewModel(
     private val repository: MuestraRepository,
+    sesion: SesionRepository = SesionRepository(),
     private val hoy: () -> LocalDate = { LocalDate.now() },
     /** Pide a WorkManager subir y bajar muestras ya (botón "Sincronizar ahora"). */
     private val programarSincronizacion: () -> Unit = {}
@@ -132,13 +147,29 @@ class HistoryViewModel(
     private val _filtro = MutableStateFlow(FiltroHistorial())
     val filtro: StateFlow<FiltroHistorial> = _filtro.asStateFlow()
 
+    /** El Analista solo ve muestras validadas (de todos los operadores). */
+    val soloValidadas: StateFlow<Boolean> = sesion.usuario
+        .map { Permisos.veSoloValidadas(it?.rol) }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, Permisos.veSoloValidadas(sesion.usuario.value?.rol))
+
+    /** Operadores con muestras, para el filtro por operador. */
+    val operadores: StateFlow<List<String>> = repository.observarMuestras()
+        .map { lista -> lista.map { it.operador }.filter { it.isNotBlank() }.distinct().sorted() }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+
     // Al cambiar el filtro se cancela la consulta anterior y se abre una nueva.
     private val resultados: Flow<List<Muestra>> =
         combine(
-            _filtro.flatMapLatest { repository.observarMuestras(it.aFiltroMuestras(hoy())) },
-            _busqueda
-        ) { lista, texto ->
-            lista.filter { it.aItemHistorial().coincideCon(texto) }
+            _filtro.flatMapLatest { filtro ->
+                repository.observarMuestras(filtro.aFiltroMuestras(hoy())).map { lista -> lista.filter(filtro::cumple) }
+            },
+            _busqueda,
+            soloValidadas
+        ) { lista, texto, validadas ->
+            lista.filter { muestra ->
+                (!validadas || muestra.estado == EstadoRevision.VALIDADO) &&
+                    muestra.aItemHistorial().coincideCon(texto)
+            }
         }
 
     val muestras: StateFlow<List<MuestraItem>> = resultados
@@ -171,6 +202,7 @@ class HistoryViewModel(
                 val container = appContainer()
                 HistoryViewModel(
                     repository = container.muestraRepository,
+                    sesion = container.sesionRepository,
                     programarSincronizacion = container.programadorSincronizacion::sincronizarPronto
                 )
             }

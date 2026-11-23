@@ -1,5 +1,6 @@
 package com.duoc.aquasample.ui.profile
 
+import com.duoc.aquasample.data.model.EstadoRevision
 import com.duoc.aquasample.data.model.Muestra
 import com.duoc.aquasample.data.model.Rol
 import com.duoc.aquasample.data.model.Usuario
@@ -92,5 +93,22 @@ class ProfileViewModelTest {
 
         assertEquals(null, viewModel.uiState.value.foto)
         assertEquals(false, viewModel.uiState.value.cargandoFoto)
+    }
+
+    @Test
+    fun `para el analista cuenta validadas y operadores distintos`() {
+        val muestras = listOf(
+            muestraDePrueba(id = 1).copy(operador = "a@x.cl", estado = EstadoRevision.VALIDADO),
+            muestraDePrueba(id = 2).copy(operador = "b@x.cl", estado = EstadoRevision.VALIDADO),
+            muestraDePrueba(id = 3).copy(operador = "a@x.cl", estado = EstadoRevision.VALIDADO),
+            muestraDePrueba(id = 4).copy(operador = "c@x.cl", estado = EstadoRevision.PENDIENTE)
+        )
+        assertEquals(3 to 2, contarParaAnalista(muestras))
+
+        val analista = ProfileUiState(esAnalista = true)
+        assertEquals("Muestras validadas", analista.etiquetaHoy)
+        assertEquals("Operadores con registros", analista.etiquetaTotal)
+        assertEquals("Muestras tomadas hoy", ProfileUiState().etiquetaHoy)
+        assertEquals("Muestras tomadas en total", ProfileUiState().etiquetaTotal)
     }
 }

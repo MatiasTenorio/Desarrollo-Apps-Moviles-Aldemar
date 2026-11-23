@@ -1,5 +1,7 @@
 package com.duoc.aquasample.ui.newSample
 
+import com.duoc.aquasample.ui.components.SuperficieClara
+import com.duoc.aquasample.ui.theme.AldemarTexto
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -114,16 +116,18 @@ fun NewSampleGuardarScreen(
             Spacer(modifier = Modifier.height(12.dp))
             Card(
                 shape = RoundedCornerShape(12.dp),
-                colors = CardDefaults.cardColors(containerColor = Color(0xFFF5F5F5)),
+                colors = CardDefaults.cardColors(containerColor = Color(0xFFF5F5F5), contentColor = AldemarTexto),
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                    FilaResumen("Centro", muestra.centro)
-                    FilaResumen("Tren", muestra.tren)
-                    FilaResumen("Línea", "Línea ${muestra.linea}")
-                    FilaResumen("Longitud del tramo", "%.2f m".format(LOCALE_CL, muestra.longitudTramoM))
-                    FilaResumen("Fecha y hora", muestra.fechaHora.format(FORMATO_FECHA_HORA))
-                    FilaResumen("Operador", muestra.operador)
+                SuperficieClara {
+                    Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                        FilaResumen("Centro", muestra.centro)
+                        FilaResumen("Tren", muestra.tren)
+                        FilaResumen("Línea", "Línea ${muestra.linea}")
+                        FilaResumen("Longitud del tramo", "%.2f m".format(LOCALE_CL, muestra.longitudTramoM))
+                        FilaResumen("Fecha y hora", muestra.fechaHora.format(FORMATO_FECHA_HORA))
+                        FilaResumen("Operador", muestra.operador)
+                    }
                 }
             }
 
