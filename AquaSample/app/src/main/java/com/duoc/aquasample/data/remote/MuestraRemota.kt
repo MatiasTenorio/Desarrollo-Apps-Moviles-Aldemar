@@ -1,6 +1,10 @@
 package com.duoc.aquasample.data.remote
 
+import com.duoc.aquasample.data.model.Chorito
+import com.duoc.aquasample.data.model.EstadoRevision
+import com.duoc.aquasample.data.model.EstadoSync
 import com.duoc.aquasample.data.model.Muestra
+import java.time.LocalDateTime
 import java.io.File
 import java.time.format.DateTimeFormatter
 
@@ -62,4 +66,45 @@ fun Muestra.aRemota(): MuestraRemotaRequest = MuestraRemotaRequest(
             tamanoCm = it.tamanoCm
         )
     }
+)
+
+/** Una muestra tal como la entrega GET /api/muestras (MuestraResponse en Spring Boot). */
+data class MuestraServidor(
+    val id: Long,
+    val uuid: String,
+    val centro: String,
+    val tren: String,
+    val linea: Int,
+    val longitudTramoM: Double,
+    /** ISO sin zona, p. ej. "2026-11-24T09:15:00". */
+    val fechaHora: String,
+    val operador: String,
+    val observaciones: String?,
+    val estado: String,
+    val fotoNombre: String?,
+    val choritos: List<ChoritoRemoto>?
+)
+
+/**
+ * Convierte una muestra del servidor al modelo local.
+ * local: la misma muestra si ya existe en el teléfono (mismo uuid); se conserva
+ * su id de Room y su foto, porque la foto solo vive en el teléfono que la tomó.
+ */
+fun MuestraServidor.aMuestraLocal(local: Muestra?): Muestra = Muestra(
+    id = local?.id ?: 0,
+    uuid = uuid,
+    centro = centro,
+    tren = tren,
+    linea = linea,
+    longitudTramoM = longitudTramoM,
+    fechaHora = LocalDateTime.parse(fechaHora),
+    operador = operador,
+    observaciones = observaciones.orEmpty(),
+    estado = EstadoRevision.entries.firstOrNull { it.name == estado } ?: EstadoRevision.PENDIENTE,
+    fotoPath = local?.fotoPath,
+    choritos = choritos.orEmpty().map {
+        Chorito(numero = it.numero, posX = it.posX?.toFloat(), posY = it.posY?.toFloat(), tamanoCm = it.tamanoCm)
+    },
+    estadoSync = EstadoSync.SINCRONIZADO,
+    remoteId = id
 )

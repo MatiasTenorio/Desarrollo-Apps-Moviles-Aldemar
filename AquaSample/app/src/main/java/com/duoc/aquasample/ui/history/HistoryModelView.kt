@@ -121,7 +121,9 @@ internal fun List<MuestraItem>.filtrarPorTexto(texto: String): List<MuestraItem>
 @OptIn(ExperimentalCoroutinesApi::class)
 class HistoryViewModel(
     private val repository: MuestraRepository,
-    private val hoy: () -> LocalDate = { LocalDate.now() }
+    private val hoy: () -> LocalDate = { LocalDate.now() },
+    /** Pide a WorkManager subir y bajar muestras ya (botón "Sincronizar ahora"). */
+    private val programarSincronizacion: () -> Unit = {}
 ) : ViewModel() {
 
     private val _busqueda = MutableStateFlow("")
@@ -155,13 +157,23 @@ class HistoryViewModel(
         _filtro.value = filtro
     }
 
+    fun onSincronizarAhora() {
+        programarSincronizacion()
+    }
+
     fun onLimpiarFiltros() {
         _filtro.value = FiltroHistorial()
     }
 
     companion object {
         val Factory: ViewModelProvider.Factory = viewModelFactory {
-            initializer { HistoryViewModel(appContainer().muestraRepository) }
+            initializer {
+                val container = appContainer()
+                HistoryViewModel(
+                    repository = container.muestraRepository,
+                    programarSincronizacion = container.programadorSincronizacion::sincronizarPronto
+                )
+            }
         }
     }
 }

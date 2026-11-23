@@ -168,4 +168,41 @@ class MuestraRepositoryImplTest {
 
         assertEquals(0, avisos)
     }
+
+    // ---------- Datos que vienen del servidor ----------
+
+    @Test
+    fun `obtener por uuid convierte la fila o devuelve null`() = runTest {
+        coEvery { dao.obtenerPorUuid("u-7") } returns filaDe(7)
+        coEvery { dao.obtenerPorUuid("no-existe") } returns null
+
+        assertEquals("#0007", repository.obtenerPorUuid("u-7")?.codigo)
+        assertNull(repository.obtenerPorUuid("no-existe"))
+    }
+
+    @Test
+    fun `guardar desde el servidor no valida, queda sincronizada y no programa subida`() = runTest {
+        var avisos = 0
+        val conAviso = MuestraRepositoryImpl(dao, reloj = { ahora }, zona = zona, alCambiarDatos = { avisos++ })
+        val entidad = slot<MuestraEntity>()
+        coEvery { dao.guardarConChoritos(capture(entidad), any()) } returns 12L
+        // Sin foto: la validación normal la rechazaría, pero el backend ya la validó.
+        val delServidor = muestraDePrueba().copy(fotoPath = null)
+
+        assertEquals(12L, conAviso.guardarDesdeServidor(delServidor))
+        assertEquals(EstadoSync.SINCRONIZADO, entidad.captured.estadoSync)
+        assertEquals(0, avisos)
+    }
+
+    @Test
+    fun `borra solo las sincronizadas que el servidor ya no tiene`() = runTest {
+        coEvery { dao.uuidsSincronizados() } returns listOf("a", "b", "c")
+
+        repository.eliminarSincronizadasAusentes(setOf("a", "c"))
+        coVerify { dao.eliminarPorUuid(listOf("b")) }
+
+        coEvery { dao.uuidsSincronizados() } returns listOf("a")
+        repository.eliminarSincronizadasAusentes(setOf("a"))
+        coVerify(exactly = 1) { dao.eliminarPorUuid(any()) }
+    }
 }

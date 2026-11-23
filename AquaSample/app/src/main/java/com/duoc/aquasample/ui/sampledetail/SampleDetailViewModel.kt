@@ -10,7 +10,9 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import com.duoc.aquasample.data.model.EstadoRevision
 import com.duoc.aquasample.data.model.EstadoSync
 import com.duoc.aquasample.data.model.Muestra
+import com.duoc.aquasample.data.model.Permisos
 import com.duoc.aquasample.data.repository.MuestraRepository
+import com.duoc.aquasample.data.repository.SesionRepository
 import com.duoc.aquasample.ui.appContainer
 import java.time.format.DateTimeFormatter
 import java.util.Locale
@@ -44,7 +46,9 @@ data class SampleDetailUiState(
     val fotoPath: String? = null,
     val mediciones: List<ChoritoMedicion> = emptyList(),
     val mostrarTodasLasMediciones: Boolean = false,
-    val errorEstado: String? = null
+    val errorEstado: String? = null,
+    /** Solo el Operador revisa y valida; el Analista ve los botones deshabilitados. */
+    val puedeCambiarEstado: Boolean = false
 ) {
     val medicionesVisibles: List<ChoritoMedicion>
         get() = if (mostrarTodasLasMediciones) mediciones else mediciones.take(5)
@@ -87,14 +91,17 @@ internal fun SampleDetailUiState.conMuestra(muestra: Muestra): SampleDetailUiSta
  */
 class SampleDetailViewModel(
     savedStateHandle: SavedStateHandle,
-    private val repository: MuestraRepository
+    private val repository: MuestraRepository,
+    private val sesion: SesionRepository = SesionRepository()
 ) : ViewModel() {
 
     private val muestraId: Long = checkNotNull(savedStateHandle[ARG_MUESTRA_ID]) {
         "Falta el argumento $ARG_MUESTRA_ID en la navegación"
     }
 
-    private val _uiState = MutableStateFlow(SampleDetailUiState())
+    private val _uiState = MutableStateFlow(
+        SampleDetailUiState(puedeCambiarEstado = Permisos.puedeCambiarEstado(sesion.usuario.value?.rol))
+    )
     val uiState: StateFlow<SampleDetailUiState> = _uiState.asStateFlow()
 
     init {
@@ -119,6 +126,10 @@ class SampleDetailViewModel(
     fun cambiarEstado(nuevo: EstadoRevision) {
         val actual = _uiState.value
         if (actual.cargando || actual.noEncontrada || actual.estado == nuevo) return
+        if (!actual.puedeCambiarEstado) {
+            _uiState.update { it.copy(errorEstado = "Solo el Operador puede cambiar el estado") }
+            return
+        }
         if (nuevo == EstadoRevision.VALIDADO && actual.cantidadChoritos == 0) {
             _uiState.update { it.copy(errorEstado = "No se puede validar una muestra sin choritos contados") }
             return
@@ -141,7 +152,8 @@ class SampleDetailViewModel(
             initializer {
                 SampleDetailViewModel(
                     savedStateHandle = createSavedStateHandle(),
-                    repository = appContainer().muestraRepository
+                    repository = appContainer().muestraRepository,
+                    sesion = appContainer().sesionRepository
                 )
             }
         }

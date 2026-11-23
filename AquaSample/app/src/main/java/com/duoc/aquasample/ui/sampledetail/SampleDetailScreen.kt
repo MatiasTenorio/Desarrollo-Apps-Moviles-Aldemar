@@ -182,6 +182,7 @@ fun SampleDetailScreen(
                     FilterChip(
                         selected = uiState.estado == estado,
                         onClick = { viewModel.cambiarEstado(estado) },
+                        enabled = uiState.puedeCambiarEstado,
                         label = { Text(estado.etiqueta) },
                         modifier = Modifier.testTag("estado_${estado.name}")
                     )

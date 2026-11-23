@@ -86,6 +86,10 @@ Los comandos de la app se ejecutan desde `AquaSample/` y los del backend desde `
 
 No hay credenciales en el repositorio: `.env` (backend), `local.properties` y `keystore.properties` (app) están en `.gitignore`. La app solo lleva la anon key pública de Insforge; las contraseñas viven en Insforge, nunca en MySQL. Open-Meteo Marine no requiere API key.
 
+## Defensa
+
+Guía de demostración (roles, Swagger → app, offline, pruebas) y ensayo del cambio en vivo: [`docs/guia-defensa.md`](docs/guia-defensa.md).
+
 ## Equipo y planificación
 
 Equipo 12 · DuocUC. Planificación en Trello: *(agregar enlace al tablero)*.

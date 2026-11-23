@@ -17,7 +17,7 @@ class SincronizacionWorker(
 
     override suspend fun doWork(): Result {
         val container = (applicationContext as AquaSampleApplication).container
-        return when (container.sincronizador.sincronizarPendientes()) {
+        return when (container.sincronizador.sincronizarTodo()) {
             is ResultadoSync.Completo -> Result.success()
             is ResultadoSync.Reintentar -> Result.retry()
         }

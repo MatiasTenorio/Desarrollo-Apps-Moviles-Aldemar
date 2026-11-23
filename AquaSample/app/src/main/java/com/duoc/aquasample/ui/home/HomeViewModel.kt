@@ -6,6 +6,8 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.duoc.aquasample.data.model.Catalogos
+import com.duoc.aquasample.data.model.Permisos
+import com.duoc.aquasample.data.model.Usuario
 import com.duoc.aquasample.data.repository.ClimaMarinoRepository
 import com.duoc.aquasample.data.repository.CondicionesMarinas
 import com.duoc.aquasample.data.repository.SesionRepository
@@ -21,7 +23,14 @@ import kotlinx.coroutines.launch
 
 /** Estado de la pantalla Home: nombre para el saludo ("Hola, operador1"). */
 data class HomeUiState(
-    val userName: String = "Usuario"
+    val userName: String = "Usuario",
+    /** false para el Analista: no ve la opción "Nueva muestra". */
+    val puedeRegistrar: Boolean = false
+)
+
+internal fun Usuario?.aHomeUiState(): HomeUiState = HomeUiState(
+    userName = this?.nombreUsuario ?: "Usuario",
+    puedeRegistrar = Permisos.puedeRegistrarMuestras(this?.rol)
 )
 
 /** Tarjeta "Condiciones del mar" (Open-Meteo Marine). */
@@ -38,11 +47,11 @@ class HomeViewModel(
 ) : ViewModel() {
 
     val uiState: StateFlow<HomeUiState> = sesion.usuario
-        .map { HomeUiState(userName = it?.nombreUsuario ?: "Usuario") }
+        .map { it.aHomeUiState() }
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.Eagerly,
-            initialValue = HomeUiState(userName = sesion.usuario.value?.nombreUsuario ?: "Usuario")
+            initialValue = sesion.usuario.value.aHomeUiState()
         )
 
     private val _centroClima = MutableStateFlow(centros.firstOrNull().orEmpty())

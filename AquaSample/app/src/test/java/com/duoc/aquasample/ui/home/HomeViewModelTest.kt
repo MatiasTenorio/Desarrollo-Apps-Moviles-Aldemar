@@ -1,5 +1,6 @@
 package com.duoc.aquasample.ui.home
 
+import org.junit.Assert.assertFalse
 import com.duoc.aquasample.data.model.Rol
 import com.duoc.aquasample.data.model.Usuario
 import com.duoc.aquasample.data.repository.ClimaMarinoRepository
@@ -78,5 +79,18 @@ class HomeViewModelTest {
         assertEquals("0,4 m", formatoMedicion(0.4, "m"))
         assertEquals("12 °C", formatoMedicion(11.6, "°C", decimales = 0))
         assertEquals("—", formatoMedicion(null, "m"))
+    }
+
+    @Test
+    fun `solo el operador ve la opcion de registrar muestras`() {
+        val sesion = SesionRepository()
+        val viewModel = crearViewModel(sesion)
+        assertFalse(viewModel.uiState.value.puedeRegistrar)
+
+        sesion.iniciar(Usuario("o", "", Rol.OPERADOR))
+        assertTrue(viewModel.uiState.value.puedeRegistrar)
+
+        sesion.iniciar(Usuario("a", "", Rol.ANALISTA))
+        assertFalse(viewModel.uiState.value.puedeRegistrar)
     }
 }

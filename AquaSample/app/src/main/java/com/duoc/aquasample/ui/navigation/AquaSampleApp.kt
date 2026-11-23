@@ -9,6 +9,9 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import com.duoc.aquasample.AquaSampleApplication
+import com.duoc.aquasample.data.model.Permisos
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -48,6 +51,13 @@ fun AquaSampleApp() {
     // de nueva muestra y el detalle quedan sin barra automáticamente.
     val showBottomBar = bottomNavItems.any { it.screen.route == currentRoute }
 
+    // El Analista no registra muestras: no ve la pestaña "Nueva muestra".
+    val sesion = (LocalContext.current.applicationContext as AquaSampleApplication).container.sesionRepository
+    val usuario by sesion.usuario.collectAsState()
+    val pestanas = bottomNavItems.filter {
+        it.screen != Screen.NewSample || Permisos.puedeRegistrarMuestras(usuario?.rol)
+    }
+
     Scaffold(
         // Cada pantalla tiene su propio Scaffold/TopAppBar y maneja sus insets;
         // así el color de la barra superior llega hasta la barra de estado.
@@ -55,7 +65,7 @@ fun AquaSampleApp() {
         bottomBar = {
             if (showBottomBar) {
                 BottomNavBar(
-                    items = bottomNavItems,
+                    items = pestanas,
                     currentRoute = currentRoute,
                     onNavigate = { route -> navController.navigateToTab(route) }
                 )

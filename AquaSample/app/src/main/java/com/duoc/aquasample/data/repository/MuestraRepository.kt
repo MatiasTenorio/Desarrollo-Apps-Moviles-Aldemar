@@ -33,4 +33,15 @@ interface MuestraRepository {
     suspend fun marcarSincronizada(id: Long, remoteId: Long)
 
     suspend fun marcarErrorSync(id: Long)
+
+    suspend fun obtenerPorUuid(uuid: String): Muestra?
+
+    /**
+     * Guarda una muestra que viene del backend, tal cual: sin validar (el backend
+     * ya la validó), como SINCRONIZADO y sin volver a programar la subida.
+     */
+    suspend fun guardarDesdeServidor(muestra: Muestra): Long
+
+    /** Borra las muestras ya sincronizadas que el backend ya no tiene (borradas en Swagger, por ejemplo). */
+    suspend fun eliminarSincronizadasAusentes(uuidsServidor: Set<String>)
 }

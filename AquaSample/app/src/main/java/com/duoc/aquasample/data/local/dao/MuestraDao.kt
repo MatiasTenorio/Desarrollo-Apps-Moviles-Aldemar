@@ -52,6 +52,16 @@ abstract class MuestraDao {
     @Query("SELECT * FROM muestras WHERE estadoSync = 'PENDIENTE' ORDER BY fechaHoraEpochMs ASC")
     abstract suspend fun obtenerPendientesSync(): List<MuestraConChoritos>
 
+    @Transaction
+    @Query("SELECT * FROM muestras WHERE uuid = :uuid")
+    abstract suspend fun obtenerPorUuid(uuid: String): MuestraConChoritos?
+
+    @Query("SELECT uuid FROM muestras WHERE estadoSync = 'SINCRONIZADO'")
+    abstract suspend fun uuidsSincronizados(): List<String>
+
+    @Query("DELETE FROM muestras WHERE uuid IN (:uuids)")
+    abstract suspend fun eliminarPorUuid(uuids: List<String>)
+
     @Insert
     abstract suspend fun insertarMuestra(muestra: MuestraEntity): Long
 

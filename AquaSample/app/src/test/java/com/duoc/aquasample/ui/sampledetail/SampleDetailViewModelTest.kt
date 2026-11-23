@@ -1,5 +1,8 @@
 package com.duoc.aquasample.ui.sampledetail
 
+import com.duoc.aquasample.data.repository.SesionRepository
+import com.duoc.aquasample.data.model.Usuario
+import com.duoc.aquasample.data.model.Rol
 import androidx.lifecycle.SavedStateHandle
 import com.duoc.aquasample.data.model.Chorito
 import com.duoc.aquasample.data.model.EstadoRevision
@@ -33,8 +36,11 @@ class SampleDetailViewModelTest {
         every { observarMuestra(7) } returns muestra
     }
 
-    private fun crearViewModel() =
-        SampleDetailViewModel(SavedStateHandle(mapOf(SampleDetailViewModel.ARG_MUESTRA_ID to 7L)), repository)
+    private fun crearViewModel(rol: Rol = Rol.OPERADOR) = SampleDetailViewModel(
+        SavedStateHandle(mapOf(SampleDetailViewModel.ARG_MUESTRA_ID to 7L)),
+        repository,
+        SesionRepository().apply { iniciar(Usuario("u", "", rol, "u@test.cl")) }
+    )
 
     @Test
     fun `muestra los datos de la muestra pedida`() {
@@ -152,5 +158,21 @@ class SampleDetailViewModelTest {
         val viewModel = crearViewModel()
         viewModel.cambiarEstado(EstadoRevision.VALIDADO)
         coVerify(exactly = 0) { repository.cambiarEstado(any(), any()) }
+    }
+
+    @Test
+    fun `el analista no puede cambiar el estado`() {
+        val viewModel = crearViewModel(rol = Rol.ANALISTA)
+        assertFalse(viewModel.uiState.value.puedeCambiarEstado)
+
+        viewModel.cambiarEstado(EstadoRevision.VALIDADO)
+
+        assertEquals("Solo el Operador puede cambiar el estado", viewModel.uiState.value.errorEstado)
+        coVerify(exactly = 0) { repository.cambiarEstado(any(), any()) }
+    }
+
+    @Test
+    fun `el operador si puede`() {
+        assertTrue(crearViewModel().uiState.value.puedeCambiarEstado)
     }
 }

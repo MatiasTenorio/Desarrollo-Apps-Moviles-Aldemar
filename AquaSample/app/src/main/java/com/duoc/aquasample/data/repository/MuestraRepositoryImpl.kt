@@ -75,6 +75,20 @@ class MuestraRepositoryImpl(
         dao.marcarErrorSync(id)
     }
 
+    override suspend fun obtenerPorUuid(uuid: String): Muestra? =
+        dao.obtenerPorUuid(uuid)?.aDominio(zona)
+
+    override suspend fun guardarDesdeServidor(muestra: Muestra): Long {
+        val entidad = muestra.copy(estadoSync = EstadoSync.SINCRONIZADO)
+            .aEntidad(actualizadoEnEpochMs = reloj(), zona = zona)
+        return dao.guardarConChoritos(entidad, muestra.choritos.map { it.aEntidad(muestraId = muestra.id) })
+    }
+
+    override suspend fun eliminarSincronizadasAusentes(uuidsServidor: Set<String>) {
+        val ausentes = dao.uuidsSincronizados().filterNot { it in uuidsServidor }
+        if (ausentes.isNotEmpty()) dao.eliminarPorUuid(ausentes)
+    }
+
     private fun inicioDelDia(fecha: LocalDate): Long =
         fecha.atStartOfDay(zona).toInstant().toEpochMilli()
 }

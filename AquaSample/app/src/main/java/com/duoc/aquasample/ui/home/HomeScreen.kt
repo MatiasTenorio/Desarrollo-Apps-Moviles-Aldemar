@@ -130,38 +130,55 @@ fun HomeScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Card principal: Nueva muestra
-            Card(
-                onClick = onNavigateToNewSample,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(120.dp),
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = AldemarPrincipal)
-            ) {
-                Row(
+            // Card principal: Nueva muestra (solo el Operador registra muestras)
+            if (uiState.puedeRegistrar) {
+                Card(
+                    onClick = onNavigateToNewSample,
                     modifier = Modifier
-                        .fillMaxSize()
-                        .padding(16.dp),
-                    verticalAlignment = Alignment.CenterVertically
+                        .fillMaxWidth()
+                        .height(120.dp),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = CardDefaults.cardColors(containerColor = AldemarPrincipal)
                 ) {
-                    Box(
+                    Row(
                         modifier = Modifier
-                            .size(48.dp)
-                            .background(Color.White.copy(alpha = 0.2f), shape = RoundedCornerShape(12.dp)),
-                        contentAlignment = Alignment.Center
+                            .fillMaxSize()
+                            .padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Icon(Icons.Default.CameraAlt, contentDescription = null, tint = Color.White)
+                        Box(
+                            modifier = Modifier
+                                .size(48.dp)
+                                .background(Color.White.copy(alpha = 0.2f), shape = RoundedCornerShape(12.dp)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(Icons.Default.CameraAlt, contentDescription = null, tint = Color.White)
+                        }
+                        Spacer(modifier = Modifier.width(16.dp))
+                        Column {
+                            Text("Nueva muestra", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                            Text(
+                                "Registra una nueva línea de choritos",
+                                color = Color.White.copy(alpha = 0.9f),
+                                fontSize = 13.sp
+                            )
+                        }
                     }
-                    Spacer(modifier = Modifier.width(16.dp))
-                    Column {
-                        Text("Nueva muestra", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 18.sp)
-                        Text(
-                            "Registra una nueva línea de choritos",
-                            color = Color.White.copy(alpha = 0.9f),
-                            fontSize = 13.sp
-                        )
-                    }
+                }
+
+            } else {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = CardDefaults.cardColors(containerColor = AldemarSecundario)
+                ) {
+                    Text(
+                        "Rol Analista: consulta del historial, el dashboard y los reportes. " +
+                            "El registro y la validación de muestras los hace el Operador.",
+                        modifier = Modifier.padding(16.dp),
+                        fontSize = 13.sp,
+                        color = AldemarTexto
+                    )
                 }
             }
 

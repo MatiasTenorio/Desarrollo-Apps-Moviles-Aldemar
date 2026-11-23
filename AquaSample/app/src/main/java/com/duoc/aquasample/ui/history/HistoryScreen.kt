@@ -23,6 +23,7 @@ import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.CloudDone
 import androidx.compose.material.icons.filled.CloudUpload
 import androidx.compose.material.icons.filled.FilterAlt
+import androidx.compose.material.icons.filled.Sync
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
@@ -87,6 +88,7 @@ fun HistoryScreen(
         onLimpiarFiltros = viewModel::onLimpiarFiltros,
         onBack = onBack,
         onFiltroClick = { mostrarFiltros = true },
+        onSincronizar = viewModel::onSincronizarAhora,
         onMuestraClick = onMuestraClick
     )
 
@@ -114,6 +116,7 @@ private fun HistoryContent(
     onLimpiarFiltros: () -> Unit,
     onBack: () -> Unit,
     onFiltroClick: () -> Unit,
+    onSincronizar: () -> Unit,
     onMuestraClick: (Long) -> Unit
 ) {
     Scaffold(
@@ -129,6 +132,9 @@ private fun HistoryContent(
                     }
                 },
                 actions = {
+                    IconButton(onClick = onSincronizar) {
+                        Icon(Icons.Filled.Sync, contentDescription = "Sincronizar ahora")
+                    }
                     IconButton(onClick = onFiltroClick) {
                         BadgedBox(
                             badge = {
@@ -311,6 +317,7 @@ private fun HistoryPreview() {
         onLimpiarFiltros = {},
         onBack = {},
         onFiltroClick = {},
+        onSincronizar = {},
         onMuestraClick = {}
     )
 }
