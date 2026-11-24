@@ -8,7 +8,8 @@ sincronización de las muestras guardadas offline en la app.
 ## Levantar en local
 
 1. Crear el archivo `.env` (no se sube a git) con las credenciales de la base local,
-   usando `.env.example` como guía.
+   usando `.env.example` como guía. `ADMIN_CORREO` es el correo que queda como
+   ADMINISTRADOR al arrancar (el primer Administrador; los demás roles se asignan desde la app).
 2. Levantar MySQL con Docker:
    ```
    docker compose up -d
@@ -32,7 +33,9 @@ sincronización de las muestras guardadas offline en la app.
 | DELETE | `/api/muestras/{id}` | Elimina la muestra y sus choritos |
 | POST | `/api/usuarios` | La app lo llama tras iniciar sesión en Insforge: registra al usuario (rol OPERADOR la primera vez) y devuelve nombre y rol |
 | GET | `/api/usuarios` | Lista los usuarios |
-| PATCH | `/api/usuarios/{id}/rol` | Cambia el rol: `OPERADOR` o `ANALISTA` |
+| POST | `/api/usuarios/alta` | Alta desde la pantalla del Administrador (la cuenta ya se creó en Insforge): correo, nombre y rol |
+| PATCH | `/api/usuarios/{id}` | El Administrador cambia nombre y rol |
+| PATCH | `/api/usuarios/{id}/rol` | Cambia el rol: `OPERADOR`, `ANALISTA` o `ADMINISTRADOR` |
 
 Los errores se responden con texto plano y código 400 o 404.
 

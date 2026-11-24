@@ -1,5 +1,11 @@
 package com.duoc.aquasample.ui.history
 
+import com.duoc.aquasample.ui.components.compartirPdf
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.material.icons.filled.PictureAsPdf
+import android.widget.Toast
 import androidx.compose.ui.text.style.TextOverflow
 import com.duoc.aquasample.ui.components.SuperficieClara
 import com.duoc.aquasample.ui.theme.AldemarTexto
@@ -80,7 +86,23 @@ fun HistoryScreen(
     val filtro by viewModel.filtro.collectAsStateWithLifecycle()
     val resumen by viewModel.resumen.collectAsStateWithLifecycle()
     val esAnalista by viewModel.soloValidadas.collectAsStateWithLifecycle()
+    val verTodos by viewModel.verTodosLosOperadores.collectAsStateWithLifecycle()
+    val puedeExportar by viewModel.puedeExportar.collectAsStateWithLifecycle()
+    val reporte by viewModel.reporte.collectAsStateWithLifecycle()
     val operadores by viewModel.operadores.collectAsStateWithLifecycle()
+    val contexto = LocalContext.current
+
+    // PDF listo: menú de compartir. Error: aviso breve.
+    LaunchedEffect(reporte) {
+        reporte.archivo?.let {
+            compartirPdf(contexto, it)
+            viewModel.onReporteAtendido()
+        }
+        reporte.error?.let {
+            Toast.makeText(contexto, it, Toast.LENGTH_LONG).show()
+            viewModel.onReporteAtendido()
+        }
+    }
     var mostrarFiltros by rememberSaveable { mutableStateOf(false) }
 
     HistoryContent(
@@ -89,6 +111,10 @@ fun HistoryScreen(
         filtro = filtro,
         resumen = resumen,
         esAnalista = esAnalista,
+        verTodos = verTodos,
+        puedeExportar = puedeExportar,
+        generandoPdf = reporte.generando,
+        onExportarPdf = viewModel::exportarPdf,
         operadores = operadores,
         onBusquedaChange = viewModel::onBusquedaChange,
         onFiltroChange = viewModel::onFiltroChange,
@@ -119,6 +145,10 @@ private fun HistoryContent(
     filtro: FiltroHistorial,
     resumen: ResumenHistorial,
     esAnalista: Boolean = false,
+    verTodos: Boolean = false,
+    puedeExportar: Boolean = false,
+    generandoPdf: Boolean = false,
+    onExportarPdf: () -> Unit = {},
     operadores: List<String> = emptyList(),
     onBusquedaChange: (String) -> Unit,
     onFiltroChange: (FiltroHistorial) -> Unit,
@@ -147,6 +177,15 @@ private fun HistoryContent(
                         }
                     },
                     actions = {
+                        if (puedeExportar) {
+                            IconButton(
+                                onClick = onExportarPdf,
+                                enabled = !generandoPdf,
+                                modifier = Modifier.testTag("boton_exportar_pdf")
+                            ) {
+                                Icon(Icons.Filled.PictureAsPdf, contentDescription = "Exportar PDF de lo filtrado")
+                            }
+                        }
                         IconButton(onClick = onSincronizar) {
                             Icon(Icons.Filled.Sync, contentDescription = "Sincronizar ahora")
                         }
@@ -184,7 +223,8 @@ private fun HistoryContent(
 
                 FiltrosRapidos(
                     filtro = filtro,
-                    esAnalista = esAnalista,
+                    mostrarOperador = verTodos,
+                    mostrarEstado = !esAnalista,
                     operadores = operadores,
                     onCambiar = onFiltroChange,
                     modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 8.dp)
@@ -224,7 +264,7 @@ private fun HistoryContent(
                         items(muestras, key = { it.id }) { muestra ->
                             MuestraCard(
                                 muestra = muestra,
-                                mostrarOperador = esAnalista,
+                                mostrarOperador = verTodos,
                                 onClick = { onMuestraClick(muestra.idInterno) }
                             )
                         }

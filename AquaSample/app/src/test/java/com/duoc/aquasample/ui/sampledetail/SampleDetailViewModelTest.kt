@@ -191,4 +191,77 @@ class SampleDetailViewModelTest {
     fun `el analista no edita`() {
         assertFalse(crearViewModel(Rol.ANALISTA).uiState.value.puedeEditar)
     }
+
+    @Test
+    fun `muestra el nombre del operador en vez del correo`() {
+        val viewModel = SampleDetailViewModel(
+            SavedStateHandle(mapOf(SampleDetailViewModel.ARG_MUESTRA_ID to 7L)),
+            repository,
+            SesionRepository(),
+            directorio = { correo -> if (correo == "operador1") "Operador Uno" else null }
+        )
+
+        assertEquals("Operador Uno", viewModel.uiState.value.operadorVisible)
+    }
+
+    @Test
+    fun `si no se conoce el nombre muestra el correo`() {
+        assertEquals("operador1", crearViewModel().uiState.value.operadorVisible)
+    }
+
+    // --- Eliminar (Administrador) ---
+
+    private fun crearConEliminador(rol: Rol, eliminador: com.duoc.aquasample.data.repository.EliminadorMuestras) =
+        SampleDetailViewModel(
+            SavedStateHandle(mapOf(SampleDetailViewModel.ARG_MUESTRA_ID to 7L)),
+            repository,
+            SesionRepository().apply { iniciar(Usuario("u", "", rol, "u@test.cl")) },
+            eliminador = eliminador
+        )
+
+    @Test
+    fun `el administrador elimina tras confirmar`() {
+        val eliminador = mockk<com.duoc.aquasample.data.repository.EliminadorMuestras>()
+        coEvery { eliminador.eliminar(any()) } returns Unit
+        val viewModel = crearConEliminador(Rol.ADMINISTRADOR, eliminador)
+        assertTrue(viewModel.uiState.value.puedeEliminar)
+
+        viewModel.onPedirEliminar()
+        assertTrue(viewModel.uiState.value.confirmandoEliminar)
+        viewModel.onCancelarEliminar()
+        assertFalse(viewModel.uiState.value.confirmandoEliminar)
+        viewModel.onPedirEliminar()
+        viewModel.eliminar()
+
+        assertTrue(viewModel.uiState.value.eliminada)
+        coVerify { eliminador.eliminar(match { it.id == 7L }) }
+    }
+
+    @Test
+    fun `si eliminar falla muestra el error y no vuelve atras`() {
+        val eliminador = mockk<com.duoc.aquasample.data.repository.EliminadorMuestras>()
+        coEvery { eliminador.eliminar(any()) } throws
+            com.duoc.aquasample.data.repository.ErrorEliminarMuestra("Sin conexión con el backend: la muestra no se eliminó.")
+        val viewModel = crearConEliminador(Rol.ADMINISTRADOR, eliminador)
+
+        viewModel.onPedirEliminar()
+        viewModel.eliminar()
+
+        val estado = viewModel.uiState.value
+        assertEquals("Sin conexión con el backend: la muestra no se eliminó.", estado.errorEliminar)
+        assertFalse(estado.eliminada)
+        assertFalse(estado.eliminando)
+    }
+
+    @Test
+    fun `otros roles no pueden eliminar`() {
+        val eliminador = mockk<com.duoc.aquasample.data.repository.EliminadorMuestras>()
+        val viewModel = crearConEliminador(Rol.ANALISTA, eliminador)
+
+        assertFalse(viewModel.uiState.value.puedeEliminar)
+        viewModel.onPedirEliminar()
+        assertFalse(viewModel.uiState.value.confirmandoEliminar)
+        viewModel.eliminar()
+        coVerify(exactly = 0) { eliminador.eliminar(any()) }
+    }
 }

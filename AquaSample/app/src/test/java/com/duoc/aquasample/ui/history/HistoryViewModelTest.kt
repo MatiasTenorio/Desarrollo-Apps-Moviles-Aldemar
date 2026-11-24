@@ -248,4 +248,75 @@ class HistoryViewModelTest {
         assertTrue(!filtro.cumple(variosOperadores[1]))
         assertTrue(!filtro.cumple(variosOperadores[2]))
     }
+
+    // --- PDF del Analista ---
+
+    @Test
+    fun `el analista exporta un pdf con las validadas que se ven`() = runTest {
+        datos.value = variosOperadores
+        var filasRecibidas = emptyList<com.duoc.aquasample.data.reporte.FilaReporte>()
+        var autor = ""
+        val viewModel = HistoryViewModel(
+            repository,
+            sesion = sesionCon(Rol.ANALISTA),
+            generador = com.duoc.aquasample.data.reporte.GeneradorReporte { filas, generadoPor, _ ->
+                filasRecibidas = filas
+                autor = generadoPor
+                java.io.File("reporte.pdf")
+            }
+        )
+        escuchar(viewModel)
+        viewModel.onFiltroChange(FiltroHistorial(operador = "op2@aldemar.cl"))
+
+        assertTrue(viewModel.puedeExportar.value)
+        viewModel.exportarPdf()
+
+        assertEquals(listOf("#0002"), filasRecibidas.map { it.codigo })
+        assertEquals("u@aldemar.cl", autor)
+        assertEquals("reporte.pdf", viewModel.reporte.value.archivo?.name)
+
+        viewModel.onReporteAtendido()
+        assertNull(viewModel.reporte.value.archivo)
+    }
+
+    @Test
+    fun `sin validadas en la lista avisa en vez de generar`() = runTest {
+        datos.value = listOf(variosOperadores[2])
+        val viewModel = HistoryViewModel(
+            repository,
+            sesion = sesionCon(Rol.ADMINISTRADOR),
+            generador = com.duoc.aquasample.data.reporte.GeneradorReporte { _, _, _ -> error("no debe llamarse") }
+        )
+
+        viewModel.exportarPdf()
+
+        assertEquals("No hay muestras validadas con estos filtros.", viewModel.reporte.value.error)
+    }
+
+    @Test
+    fun `si falla el generador muestra un error`() = runTest {
+        datos.value = variosOperadores
+        val viewModel = HistoryViewModel(
+            repository,
+            sesion = sesionCon(Rol.ANALISTA),
+            generador = com.duoc.aquasample.data.reporte.GeneradorReporte { _, _, _ -> throw java.io.IOException("disco") }
+        )
+
+        viewModel.exportarPdf()
+
+        assertEquals("No se pudo generar el reporte.", viewModel.reporte.value.error)
+    }
+
+    @Test
+    fun `el operador no exporta y el administrador ve a todos los operadores`() = runTest {
+        val operador = HistoryViewModel(repository, sesion = sesionCon(Rol.OPERADOR))
+        assertTrue(!operador.puedeExportar.value)
+        operador.exportarPdf()
+        assertNull(operador.reporte.value.error)
+        assertTrue(!operador.reporte.value.generando)
+
+        val admin = HistoryViewModel(repository, sesion = sesionCon(Rol.ADMINISTRADOR))
+        assertTrue(admin.verTodosLosOperadores.value)
+        assertTrue(!admin.soloValidadas.value)
+    }
 }

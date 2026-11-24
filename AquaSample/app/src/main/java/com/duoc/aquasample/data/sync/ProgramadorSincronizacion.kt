@@ -31,9 +31,13 @@ class ProgramadorSincronizacion(contexto: Context) {
             .setConstraints(conRed)
             .setBackoffCriteria(BackoffPolicy.EXPONENTIAL, 30, TimeUnit.SECONDS)
             .build()
-        // APPEND_OR_REPLACE: si ya hay una sincronización corriendo, esta se
-        // encola después, así no se pierde una muestra guardada a mitad de camino.
-        workManager.enqueueUniqueWork(TRABAJO_INMEDIATO, ExistingWorkPolicy.APPEND_OR_REPLACE, trabajo)
+        // REPLACE y no APPEND: si un intento anterior falló (por ejemplo, sin
+        // backend), WorkManager lo deja esperando con espera exponencial
+        // (30 s, 1 min, 2 min... hasta horas). Con APPEND, cada guardado y cada
+        // toque de "Sincronizar" quedaba en fila detrás de ese intento dormido.
+        // Reemplazarlo es seguro: el trabajo nuevo vuelve a leer todas las
+        // pendientes de Room y el backend reconoce cada muestra por su uuid.
+        workManager.enqueueUniqueWork(TRABAJO_INMEDIATO, ExistingWorkPolicy.REPLACE, trabajo)
     }
 
     fun programarPeriodica() {

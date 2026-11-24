@@ -1,5 +1,8 @@
 package com.duoc.aquasample.ui.home
 
+import androidx.compose.ui.platform.testTag
+import androidx.compose.material.icons.filled.Group
+import com.duoc.aquasample.ui.components.Tinta
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.IntrinsicSize
@@ -78,6 +81,7 @@ fun HomeScreen(
     onNavigateToHistory: () -> Unit = {},
     onNavigateToProfile: () -> Unit = {},
     onNavigateToDashboard: () -> Unit = {},
+    onNavigateToUsuarios: () -> Unit = {},
     onOpenMenu: () -> Unit = {} // TODO: definir qué abre el ícono de menú (¿Drawer con cerrar sesión / configuración?)
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -123,12 +127,12 @@ fun HomeScreen(
                 text = "Hola, ${uiState.userName}",
                 style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Bold,
-                color = AldemarTexto
+                color = Tinta.principal
             )
             Text(
                 text = "¿Qué quieres hacer hoy?",
                 style = MaterialTheme.typography.bodyMedium,
-                color = Color.Gray
+                color = Tinta.secundaria
             )
 
             Spacer(modifier = Modifier.height(24.dp))
@@ -170,23 +174,49 @@ fun HomeScreen(
                     }
                 }
 
-            } else {
+            } else if (uiState.puedeAdministrarUsuarios) {
+                // Administrador: su tarea principal es gestionar usuarios.
                 Card(
-                    modifier = Modifier.fillMaxWidth(),
+                    onClick = onNavigateToUsuarios,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(min = 120.dp)
+                        .testTag("tarjeta_usuarios"),
                     shape = RoundedCornerShape(16.dp),
-                    colors = CardDefaults.cardColors(containerColor = AldemarSecundario, contentColor = AldemarTexto)
+                    colors = CardDefaults.cardColors(containerColor = AldemarPrincipal)
                 ) {
-                    Text(
-                        "Rol Analista: consulta del historial, el dashboard y los reportes. " +
-                            "El registro y la validación de muestras los hace el Operador.",
-                        modifier = Modifier.padding(16.dp),
-                        fontSize = 13.sp,
-                        color = AldemarTexto
-                    )
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .heightIn(min = 120.dp)
+                            .padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(48.dp)
+                                .background(Color.White.copy(alpha = 0.2f), shape = RoundedCornerShape(12.dp)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(Icons.Default.Group, contentDescription = null, tint = Color.White)
+                        }
+                        Spacer(modifier = Modifier.width(16.dp))
+                        Column {
+                            Text("Usuarios", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                            Text(
+                                "Da de alta usuarios y asigna nombre y rol",
+                                color = Color.White.copy(alpha = 0.9f),
+                                fontSize = 13.sp
+                            )
+                        }
+                    }
                 }
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            // El Analista no tiene tarjeta principal: parte directo con Historial y Perfil.
+            if (uiState.puedeRegistrar || uiState.puedeAdministrarUsuarios) {
+                Spacer(modifier = Modifier.height(16.dp))
+            }
 
             // Fila: Historial + Perfil
             // IntrinsicSize.Min: las dos tarjetas crecen juntas hasta el alto de la más alta,

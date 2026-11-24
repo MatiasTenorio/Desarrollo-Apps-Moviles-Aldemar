@@ -125,7 +125,10 @@ private fun LoginContent(
     val formaCampo = RoundedCornerShape(16.dp)
 
     SuperficieClara {
-        Box(modifier = Modifier.fillMaxSize().background(Color.White)) {
+        // imePadding en la pantalla completa: con el teclado abierto todo se
+        // acomoda en el espacio que queda arriba, y el panel se puede deslizar.
+        // Antes iba dentro del panel, que tiene alto fijo y quedaba bajo el teclado.
+        Box(modifier = Modifier.fillMaxSize().background(Color.White).imePadding()) {
 
             // ---------- Mitad superior: degradado azul + logo ----------
             Box(
@@ -168,7 +171,6 @@ private fun LoginContent(
                     .fillMaxHeight(0.58f)
                     .background(Color.White, OndaSuperiorShape)
                     .verticalScroll(rememberScrollState())
-                    .imePadding()
                     .padding(start = 24.dp, end = 24.dp, top = 56.dp, bottom = 24.dp)
             ) {
                 Text(

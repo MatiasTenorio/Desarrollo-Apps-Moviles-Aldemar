@@ -1,9 +1,15 @@
 package com.duoc.aquasample.data
 
+import com.duoc.aquasample.data.repository.EliminadorMuestras
+import com.duoc.aquasample.data.sync.AlmacenFotosAndroid
+import com.duoc.aquasample.data.repository.DirectorioUsuariosRemoto
+import com.duoc.aquasample.data.repository.DirectorioUsuarios
 import android.content.Context
 import androidx.room.Room
 import com.duoc.aquasample.data.auth.Autenticador
 import com.duoc.aquasample.data.auth.AutenticadorInsforge
+import com.duoc.aquasample.data.repository.UsuariosRepository
+import com.duoc.aquasample.data.repository.UsuariosRepositoryImpl
 import dev.insforge.auth.Auth
 import dev.insforge.auth.auth
 import dev.insforge.createInsforgeClient
@@ -62,7 +68,7 @@ class AppContainer(context: Context) {
     }
 
     val sincronizador: SincronizadorMuestras by lazy {
-        SincronizadorMuestras(muestraRepository, api)
+        SincronizadorMuestras(muestraRepository, api, AlmacenFotosAndroid(context))
     }
 
     /** API externa Open-Meteo Marine: otro servidor, por eso su propio Retrofit. */
@@ -83,19 +89,42 @@ class AppContainer(context: Context) {
      * Login con Insforge. La URL y la anon key se leen de local.properties
      * (insforge.baseUrl / insforge.anonKey), que no se sube a git.
      */
-    val autenticador: Autenticador by lazy {
-        val configurado = BuildConfig.INSFORGE_BASE_URL.isNotBlank() && BuildConfig.INSFORGE_ANON_KEY.isNotBlank()
-        val insforge = if (configurado) {
+    private val insforgeConfigurado: Boolean =
+        BuildConfig.INSFORGE_BASE_URL.isNotBlank() && BuildConfig.INSFORGE_ANON_KEY.isNotBlank()
+
+    // Un solo cliente de Insforge para el login y para el alta de usuarios.
+    private val insforge by lazy {
+        if (insforgeConfigurado) {
             createInsforgeClient(BuildConfig.INSFORGE_BASE_URL, BuildConfig.INSFORGE_ANON_KEY) {
                 install(Auth)
             }
         } else {
             null
         }
+    }
+
+    val autenticador: Autenticador by lazy {
         AutenticadorInsforge(
             iniciarEnInsforge = { correo, clave -> insforge?.auth?.signIn(email = correo, password = clave) },
             api = api,
-            configurado = configurado
+            configurado = insforgeConfigurado
+        )
+    }
+
+    /** Eliminar muestras (Administrador): backend, teléfono y foto. */
+    val eliminadorMuestras: EliminadorMuestras by lazy { EliminadorMuestras(muestraRepository, api, fotoRepository) }
+
+    /** Correo del operador → nombre visible (Detalle de muestra). */
+    val directorioUsuarios: DirectorioUsuarios by lazy { DirectorioUsuariosRemoto(api, sesionRepository) }
+
+    /** Pantalla del Administrador: la cuenta se crea en Insforge y el nombre y rol en el backend. */
+    val usuariosRepository: UsuariosRepository by lazy {
+        UsuariosRepositoryImpl(
+            api = api,
+            crearEnInsforge = { correo, clave, nombre ->
+                val cliente = insforge ?: throw IllegalStateException("Falta configurar Insforge en local.properties")
+                cliente.auth.signUp(email = correo, password = clave, name = nombre)
+            }
         )
     }
 

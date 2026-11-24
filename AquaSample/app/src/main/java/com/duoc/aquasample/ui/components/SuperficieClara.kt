@@ -16,6 +16,8 @@ private val EsquemaClaro = lightColorScheme(
     onSurfaceVariant = AldemarTexto.copy(alpha = 0.7f)
 )
 
+private val TintaClara = ColoresTinta(principal = AldemarTexto, secundaria = AldemarTexto.copy(alpha = 0.7f))
+
 /**
  * Para contenido que siempre va sobre un fondo claro (tarjetas blancas o
  * celestes de la marca). En modo noche, Material pinta el texto y los campos
@@ -30,7 +32,10 @@ fun SuperficieClara(contenido: @Composable () -> Unit) {
         typography = MaterialTheme.typography,
         shapes = MaterialTheme.shapes
     ) {
-        CompositionLocalProvider(LocalContentColor provides AldemarTexto) {
+        CompositionLocalProvider(
+            LocalContentColor provides AldemarTexto,
+            LocalTinta provides TintaClara
+        ) {
             contenido()
         }
     }

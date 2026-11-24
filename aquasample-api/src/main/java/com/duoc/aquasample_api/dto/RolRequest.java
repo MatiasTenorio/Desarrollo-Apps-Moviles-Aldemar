@@ -11,6 +11,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class RolRequest {
 
-    @NotNull(message = "El rol es obligatorio (OPERADOR o ANALISTA)")
+    @NotNull(message = "El rol es obligatorio (OPERADOR, ANALISTA o ADMINISTRADOR)")
     private Rol rol;
 }

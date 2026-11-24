@@ -13,6 +13,7 @@ sealed class ErrorLogin(mensaje: String) : Exception(mensaje) {
     class CredencialesInvalidas : ErrorLogin("Correo o contraseña incorrectos")
     class SinConexion : ErrorLogin("Sin conexión. Revisa tu internet e intenta de nuevo.")
     class SinConfigurar : ErrorLogin("Falta configurar Insforge en local.properties")
+    class CorreoSinVerificar : ErrorLogin("Primero confirma tu correo: abre el mensaje de verificación que te llegó.")
 }
 
 /** Inicia sesión y entrega el usuario con su rol. Interface para poder probar el Login sin red. */
@@ -47,6 +48,8 @@ class AutenticadorInsforge(
         } catch (e: IOException) {
             return Result.failure(ErrorLogin.SinConexion())
         } catch (e: Exception) {
+            // Insforge responde 403 "Email verification required" si la cuenta no confirmó su correo.
+            if ("verif" in e.message.orEmpty().lowercase()) return Result.failure(ErrorLogin.CorreoSinVerificar())
             // El SDK lanza su propia excepción HTTP ante credenciales inválidas.
             return Result.failure(ErrorLogin.CredencialesInvalidas())
         }

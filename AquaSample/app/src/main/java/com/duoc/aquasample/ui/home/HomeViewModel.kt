@@ -25,15 +25,22 @@ import kotlinx.coroutines.launch
 data class HomeUiState(
     val userName: String = "Usuario",
     /** false para el Analista: no ve la opción "Nueva muestra". */
-    val puedeRegistrar: Boolean = false
+    val puedeRegistrar: Boolean = false,
+    /** true para el Administrador: ve la tarjeta "Usuarios". */
+    val puedeAdministrarUsuarios: Boolean = false
 ) {
     val subtituloHistorial: String
-        get() = if (puedeRegistrar) "Revisa y valida tus muestras" else "Revisa las muestras validadas de todos los operadores"
+        get() = when {
+            puedeRegistrar -> "Revisa y valida tus muestras"
+            puedeAdministrarUsuarios -> "Revisa las muestras de todos los operadores"
+            else -> "Revisa las muestras validadas de todos los operadores"
+        }
 }
 
 internal fun Usuario?.aHomeUiState(): HomeUiState = HomeUiState(
     userName = this?.nombreUsuario ?: "Usuario",
-    puedeRegistrar = Permisos.puedeRegistrarMuestras(this?.rol)
+    puedeRegistrar = Permisos.puedeRegistrarMuestras(this?.rol),
+    puedeAdministrarUsuarios = Permisos.puedeAdministrarUsuarios(this?.rol)
 )
 
 /** Tarjeta "Condiciones del mar" (Open-Meteo Marine). */

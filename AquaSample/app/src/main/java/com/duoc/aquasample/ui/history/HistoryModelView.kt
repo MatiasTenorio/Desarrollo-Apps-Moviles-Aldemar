@@ -1,5 +1,11 @@
 package com.duoc.aquasample.ui.history
 
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.first
+import java.time.LocalDateTime
+import com.duoc.aquasample.ui.dashboard.ReporteUiState
+import com.duoc.aquasample.data.reporte.filasReporte
+import com.duoc.aquasample.data.reporte.GeneradorReporte
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
@@ -135,10 +141,13 @@ internal fun List<MuestraItem>.filtrarPorTexto(texto: String): List<MuestraItem>
 @OptIn(ExperimentalCoroutinesApi::class)
 class HistoryViewModel(
     private val repository: MuestraRepository,
-    sesion: SesionRepository = SesionRepository(),
+    private val sesion: SesionRepository = SesionRepository(),
     private val hoy: () -> LocalDate = { LocalDate.now() },
     /** Pide a WorkManager subir y bajar muestras ya (botón "Sincronizar ahora"). */
-    private val programarSincronizacion: () -> Unit = {}
+    private val programarSincronizacion: () -> Unit = {},
+    /** PDF del Analista/Administrador con las muestras validadas que muestra la lista. */
+    private val generador: GeneradorReporte = GeneradorReporte { _, _, _ -> error("Sin generador de reportes") },
+    private val ahora: () -> LocalDateTime = { LocalDateTime.now() }
 ) : ViewModel() {
 
     private val _busqueda = MutableStateFlow("")
@@ -151,6 +160,18 @@ class HistoryViewModel(
     val soloValidadas: StateFlow<Boolean> = sesion.usuario
         .map { Permisos.veSoloValidadas(it?.rol) }
         .stateIn(viewModelScope, SharingStarted.Eagerly, Permisos.veSoloValidadas(sesion.usuario.value?.rol))
+
+    /** Analista y Administrador: filtro por operador y quién tomó cada muestra. */
+    val verTodosLosOperadores: StateFlow<Boolean> = sesion.usuario
+        .map { Permisos.veTodosLosOperadores(it?.rol) }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, Permisos.veTodosLosOperadores(sesion.usuario.value?.rol))
+
+    val puedeExportar: StateFlow<Boolean> = sesion.usuario
+        .map { Permisos.puedeExportarReporte(it?.rol) }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, Permisos.puedeExportarReporte(sesion.usuario.value?.rol))
+
+    private val _reporte = MutableStateFlow(ReporteUiState())
+    val reporte: StateFlow<ReporteUiState> = _reporte.asStateFlow()
 
     /** Operadores con muestras, para el filtro por operador. */
     val operadores: StateFlow<List<String>> = repository.observarMuestras()
@@ -192,6 +213,33 @@ class HistoryViewModel(
         programarSincronizacion()
     }
 
+    /**
+     * Genera el PDF con lo que se ve en la lista (búsqueda y filtros aplicados),
+     * solo las muestras validadas. Así el Analista puede sacar, por ejemplo,
+     * el reporte de un centro o de una línea.
+     */
+    fun exportarPdf() {
+        if (_reporte.value.generando || !puedeExportar.value) return
+        _reporte.value = ReporteUiState(generando = true)
+        viewModelScope.launch {
+            val filas = filasReporte(resultados.first())
+            _reporte.value = if (filas.isEmpty()) {
+                ReporteUiState(error = "No hay muestras validadas con estos filtros.")
+            } else {
+                runCatching { generador.generar(filas, sesion.usuario.value?.correo ?: "Usuario", ahora()) }
+                    .fold(
+                        onSuccess = { ReporteUiState(archivo = it) },
+                        onFailure = { ReporteUiState(error = "No se pudo generar el reporte.") }
+                    )
+            }
+        }
+    }
+
+    /** La pantalla ya abrió el menú de compartir o mostró el error: se limpia para no repetirlo. */
+    fun onReporteAtendido() {
+        _reporte.value = ReporteUiState()
+    }
+
     fun onLimpiarFiltros() {
         _filtro.value = FiltroHistorial()
     }
@@ -203,6 +251,7 @@ class HistoryViewModel(
                 HistoryViewModel(
                     repository = container.muestraRepository,
                     sesion = container.sesionRepository,
+                    generador = container.generadorReporte,
                     programarSincronizacion = container.programadorSincronizacion::sincronizarPronto
                 )
             }

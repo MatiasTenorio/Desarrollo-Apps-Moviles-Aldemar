@@ -1,5 +1,7 @@
 package com.duoc.aquasample.ui.sampledetail
 
+import com.duoc.aquasample.data.repository.EliminadorMuestras
+import com.duoc.aquasample.data.repository.DirectorioUsuarios
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
@@ -37,6 +39,8 @@ data class SampleDetailUiState(
     val linea: String = "",
     val longitudTramo: String = "",
     val operador: String = "",
+    /** Nombre visible del operador; null mientras se busca o si no se conoce (se muestra el correo). */
+    val operadorNombre: String? = null,
     val observaciones: String = "",
     val cantidadChoritos: Int = 0,
     val tamanoPromedioCm: Double? = null,
@@ -50,8 +54,18 @@ data class SampleDetailUiState(
     /** Solo el Operador revisa y valida; el Analista ve los botones deshabilitados. */
     val puedeCambiarEstado: Boolean = false,
     /** Operador y muestra no validada (una validada está cerrada). */
-    val puedeEditar: Boolean = false
+    val puedeEditar: Boolean = false,
+    /** Solo el Administrador elimina muestras. */
+    val puedeEliminar: Boolean = false,
+    val confirmandoEliminar: Boolean = false,
+    val eliminando: Boolean = false,
+    /** true al terminar: la pantalla vuelve atrás. */
+    val eliminada: Boolean = false,
+    val errorEliminar: String? = null
 ) {
+    val operadorVisible: String
+        get() = operadorNombre ?: operador
+
     val medicionesVisibles: List<ChoritoMedicion>
         get() = if (mostrarTodasLasMediciones) mediciones else mediciones.take(5)
 
@@ -94,21 +108,33 @@ internal fun SampleDetailUiState.conMuestra(muestra: Muestra): SampleDetailUiSta
 class SampleDetailViewModel(
     savedStateHandle: SavedStateHandle,
     private val repository: MuestraRepository,
-    private val sesion: SesionRepository = SesionRepository()
+    private val sesion: SesionRepository = SesionRepository(),
+    private val directorio: DirectorioUsuarios = DirectorioUsuarios { null },
+    private val eliminador: EliminadorMuestras? = null
 ) : ViewModel() {
+
+    // La muestra tal como viene de Room: la necesita el eliminador (remoteId, foto).
+    private var muestraActual: Muestra? = null
+
+    // Correo del que ya se pidió el nombre, para no repetir la búsqueda en cada cambio de la muestra.
+    private var correoBuscado: String? = null
 
     private val muestraId: Long = checkNotNull(savedStateHandle[ARG_MUESTRA_ID]) {
         "Falta el argumento $ARG_MUESTRA_ID en la navegación"
     }
 
     private val _uiState = MutableStateFlow(
-        SampleDetailUiState(puedeCambiarEstado = Permisos.puedeCambiarEstado(sesion.usuario.value?.rol))
+        SampleDetailUiState(
+            puedeCambiarEstado = Permisos.puedeCambiarEstado(sesion.usuario.value?.rol),
+            puedeEliminar = Permisos.puedeEliminarMuestras(sesion.usuario.value?.rol)
+        )
     )
     val uiState: StateFlow<SampleDetailUiState> = _uiState.asStateFlow()
 
     init {
         viewModelScope.launch {
             repository.observarMuestra(muestraId).collect { muestra ->
+                muestraActual = muestra
                 _uiState.update { estado ->
                     if (muestra == null) {
                         estado.copy(cargando = false, noEncontrada = true)
@@ -117,6 +143,7 @@ class SampleDetailViewModel(
                             .copy(puedeEditar = Permisos.puedeEditar(sesion.usuario.value?.rol, muestra.estado))
                     }
                 }
+                muestra?.let { buscarNombre(it.operador) }
             }
         }
     }
@@ -144,6 +171,41 @@ class SampleDetailViewModel(
         }
     }
 
+    private fun buscarNombre(correo: String) {
+        if (correo.isBlank() || correo == correoBuscado) return
+        correoBuscado = correo
+        viewModelScope.launch {
+            val nombre = directorio.nombreDe(correo)
+            _uiState.update { if (it.operador == correo) it.copy(operadorNombre = nombre) else it }
+        }
+    }
+
+    fun onPedirEliminar() = _uiState.update {
+        if (it.puedeEliminar && !it.cargando && !it.noEncontrada) it.copy(confirmandoEliminar = true, errorEliminar = null) else it
+    }
+
+    fun onCancelarEliminar() = _uiState.update { it.copy(confirmandoEliminar = false) }
+
+    fun eliminar() {
+        val muestra = muestraActual ?: return
+        val estado = _uiState.value
+        if (!estado.puedeEliminar || estado.eliminando || eliminador == null) return
+        _uiState.update { it.copy(eliminando = true, errorEliminar = null) }
+        viewModelScope.launch {
+            runCatching { eliminador.eliminar(muestra) }
+                .onSuccess { _uiState.update { it.copy(eliminando = false, confirmandoEliminar = false, eliminada = true) } }
+                .onFailure { e ->
+                    _uiState.update {
+                        it.copy(
+                            eliminando = false,
+                            confirmandoEliminar = false,
+                            errorEliminar = e.message ?: "No se pudo eliminar la muestra."
+                        )
+                    }
+                }
+        }
+    }
+
     fun onToggleMostrarTodasLasMediciones() {
         _uiState.update { it.copy(mostrarTodasLasMediciones = !it.mostrarTodasLasMediciones) }
     }
@@ -156,7 +218,9 @@ class SampleDetailViewModel(
                 SampleDetailViewModel(
                     savedStateHandle = createSavedStateHandle(),
                     repository = appContainer().muestraRepository,
-                    sesion = appContainer().sesionRepository
+                    sesion = appContainer().sesionRepository,
+                    directorio = appContainer().directorioUsuarios,
+                    eliminador = appContainer().eliminadorMuestras
                 )
             }
         }

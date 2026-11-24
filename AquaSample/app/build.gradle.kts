@@ -158,6 +158,7 @@ kover {
                     "com.duoc.aquasample.data.repository.FotoRepositoryImpl*",
                     "com.duoc.aquasample.data.sync.SincronizacionWorker*",
                     "com.duoc.aquasample.data.sync.ProgramadorSincronizacion*",
+                    "com.duoc.aquasample.data.sync.AlmacenFotosAndroid*",
                     "com.duoc.aquasample.data.reporte.GeneradorReportePdf*",
                     "com.duoc.aquasample.ui.ViewModelExtrasKt",
                     "*ViewModel\$Companion*",

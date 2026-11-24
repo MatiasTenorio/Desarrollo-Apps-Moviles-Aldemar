@@ -39,4 +39,37 @@ class PermisosTest {
         assertFalse(Permisos.veSoloValidadas(Rol.OPERADOR))
         assertFalse(Permisos.veSoloValidadas(null))
     }
+
+    @Test
+    fun `el administrador gestiona usuarios y ve el trabajo de todos`() {
+        assertTrue(Permisos.puedeAdministrarUsuarios(Rol.ADMINISTRADOR))
+        assertTrue(Permisos.veTodosLosOperadores(Rol.ADMINISTRADOR))
+        assertTrue(Permisos.puedeExportarReporte(Rol.ADMINISTRADOR))
+        assertFalse(Permisos.puedeRegistrarMuestras(Rol.ADMINISTRADOR))
+        assertFalse(Permisos.puedeCambiarEstado(Rol.ADMINISTRADOR))
+        assertFalse(Permisos.veSoloValidadas(Rol.ADMINISTRADOR))
+    }
+
+    @Test
+    fun `solo el administrador gestiona usuarios`() {
+        assertFalse(Permisos.puedeAdministrarUsuarios(Rol.OPERADOR))
+        assertFalse(Permisos.puedeAdministrarUsuarios(Rol.ANALISTA))
+        assertFalse(Permisos.puedeAdministrarUsuarios(null))
+    }
+
+    @Test
+    fun `el analista exporta reportes y el operador no`() {
+        assertTrue(Permisos.puedeExportarReporte(Rol.ANALISTA))
+        assertTrue(Permisos.veTodosLosOperadores(Rol.ANALISTA))
+        assertFalse(Permisos.puedeExportarReporte(Rol.OPERADOR))
+        assertFalse(Permisos.veTodosLosOperadores(Rol.OPERADOR))
+    }
+
+    @Test
+    fun `solo el administrador elimina muestras`() {
+        assertTrue(Permisos.puedeEliminarMuestras(Rol.ADMINISTRADOR))
+        assertFalse(Permisos.puedeEliminarMuestras(Rol.OPERADOR))
+        assertFalse(Permisos.puedeEliminarMuestras(Rol.ANALISTA))
+        assertFalse(Permisos.puedeEliminarMuestras(null))
+    }
 }

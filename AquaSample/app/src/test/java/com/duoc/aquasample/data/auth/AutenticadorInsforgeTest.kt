@@ -81,4 +81,19 @@ class AutenticadorInsforgeTest {
         assertTrue(error is ErrorLogin.SinConfigurar)
         assertTrue(intentos.isEmpty())
     }
+
+    @Test
+    fun `reconoce el rol administrador`() = runTest {
+        coEvery { api.registrarUsuario(any()) } returns UsuarioRemotoResponse("jefa@test.cl", "Jefa", "ADMINISTRADOR")
+        assertEquals(Rol.ADMINISTRADOR, autenticador.iniciarSesion("jefa@test.cl", "1").getOrThrow().rol)
+    }
+
+    @Test
+    fun `una cuenta sin verificar recibe un mensaje claro`() = runTest {
+        falloInsforge = IllegalStateException("FORBIDDEN: Email verification required")
+
+        val error = autenticador.iniciarSesion("nueva@test.cl", "clave123").exceptionOrNull()
+
+        assertTrue(error is ErrorLogin.CorreoSinVerificar)
+    }
 }

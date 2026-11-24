@@ -1,5 +1,10 @@
 package com.duoc.aquasample.ui.sampledetail
 
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.material3.AlertDialog
+import com.duoc.aquasample.ui.components.SuperficieOscura
+import com.duoc.aquasample.ui.components.Tinta
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.material3.CircularProgressIndicator
 import com.duoc.aquasample.data.model.EstadoRevision
 import com.duoc.aquasample.data.model.EstadoSync
@@ -93,6 +98,11 @@ fun SampleDetailScreen(
     val fotoPath = uiState.fotoPath
     var mostrarFotoCompleta by remember { mutableStateOf(false) }
 
+    // Eliminada: se vuelve al Historial (la muestra ya no existe en Room).
+    LaunchedEffect(uiState.eliminada) {
+        if (uiState.eliminada) onBack()
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -113,7 +123,7 @@ fun SampleDetailScreen(
                 contentAlignment = Alignment.Center
             ) {
                 if (uiState.cargando) CircularProgressIndicator()
-                else Text("Esta muestra ya no existe.", color = Color.Gray)
+                else Text("Esta muestra ya no existe.", color = Tinta.secundaria)
             }
             return@Scaffold
         }
@@ -177,13 +187,17 @@ fun SampleDetailScreen(
 
             Text("Estado de revisión", fontWeight = FontWeight.Bold)
             Spacer(modifier = Modifier.height(8.dp))
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            // Con letra grande no caben los tres chips: la fila se desliza en vez de partir "Validado".
+            Row(
+                modifier = Modifier.horizontalScroll(rememberScrollState()),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
                 EstadoRevision.entries.forEach { estado ->
                     FilterChip(
                         selected = uiState.estado == estado,
                         onClick = { viewModel.cambiarEstado(estado) },
                         enabled = uiState.puedeCambiarEstado,
-                        label = { Text(estado.etiqueta) },
+                        label = { Text(estado.etiqueta, maxLines = 1, softWrap = false) },
                         modifier = Modifier.testTag("estado_${estado.name}")
                     )
                 }
@@ -242,7 +256,7 @@ fun SampleDetailScreen(
                 DetailCard(modifier = Modifier.weight(1f), label = "Longitud del tramo", value = uiState.longitudTramo)
             }
             Spacer(modifier = Modifier.height(12.dp))
-            DetailCard(modifier = Modifier.fillMaxWidth(), label = "Operador", value = uiState.operador)
+            DetailCard(modifier = Modifier.fillMaxWidth(), label = "Operador", value = uiState.operadorVisible)
             if (uiState.observaciones.isNotBlank()) {
                 Spacer(modifier = Modifier.height(12.dp))
                 DetailCard(modifier = Modifier.fillMaxWidth(), label = "Observaciones", value = uiState.observaciones)
@@ -253,7 +267,7 @@ fun SampleDetailScreen(
             Text("Lista de individuos", fontWeight = FontWeight.Bold)
             Spacer(modifier = Modifier.height(8.dp))
             if (uiState.mediciones.isEmpty()) {
-                Text("Todavía no hay choritos medidos.", color = Color.Gray)
+                Text("Todavía no hay choritos medidos.", color = Tinta.secundaria)
             } else Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -286,27 +300,70 @@ fun SampleDetailScreen(
                 ) {
                     Text("Volver")
                 }
-                Button(
-                    onClick = onEditar,
-                    enabled = uiState.puedeEditar,
-                    colors = ButtonDefaults.buttonColors(containerColor = AldemarPrincipal),
-                    modifier = Modifier
-                        .weight(1f)
-                        .height(50.dp)
-                ) {
-                    Text("Editar")
+                // Administrador: limpieza de registros (por ejemplo, muestras de prueba).
+                if (uiState.puedeEliminar) {
+                    Button(
+                        onClick = viewModel::onPedirEliminar,
+                        enabled = !uiState.eliminando,
+                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(50.dp)
+                            .testTag("boton_eliminar_muestra")
+                    ) {
+                        Text(if (uiState.eliminando) "Eliminando..." else "Eliminar")
+                    }
+                }
+                // Editar es tarea del Operador: Analista y Administrador no lo ven.
+                if (uiState.puedeCambiarEstado) {
+                    Button(
+                        onClick = onEditar,
+                        enabled = uiState.puedeEditar,
+                        colors = ButtonDefaults.buttonColors(containerColor = AldemarPrincipal),
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(50.dp)
+                    ) {
+                        Text("Editar")
+                    }
                 }
             }
-            if (!uiState.cargando && !uiState.puedeEditar) {
+            uiState.errorEliminar?.let {
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(it, color = MaterialTheme.colorScheme.error, fontSize = 13.sp)
+            }
+            if (!uiState.cargando && uiState.puedeCambiarEstado && !uiState.puedeEditar) {
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
-                    if (uiState.puedeCambiarEstado) "Muestra validada: cámbiala a Observado para editarla."
-                    else "Solo el Operador puede editar muestras.",
+                    "Muestra validada: cámbiala a Observado para editarla.",
                     fontSize = 12.sp,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
         }
+    }
+
+    if (uiState.confirmandoEliminar) {
+        AlertDialog(
+            onDismissRequest = { if (!uiState.eliminando) viewModel.onCancelarEliminar() },
+            title = { Text("¿Eliminar la muestra ${uiState.id}?") },
+            text = {
+                Text(
+                    "Se borra del servidor, de este teléfono y de los demás al sincronizar, " +
+                        "junto con su foto y sus choritos. No se puede deshacer."
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = viewModel::eliminar,
+                    enabled = !uiState.eliminando,
+                    modifier = Modifier.testTag("confirmar_eliminar_muestra")
+                ) { Text("Eliminar", color = MaterialTheme.colorScheme.error) }
+            },
+            dismissButton = {
+                TextButton(onClick = viewModel::onCancelarEliminar, enabled = !uiState.eliminando) { Text("Cancelar") }
+            }
+        )
     }
 
     if (mostrarFotoCompleta && fotoPath != null) {
@@ -397,25 +454,28 @@ private fun FotoCompletaDialog(fotoPath: String, onDismiss: () -> Unit) {
         onDismissRequest = onDismiss,
         properties = DialogProperties(usePlatformDefaultWidth = false)
     ) {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(Color.Black)
-        ) {
-            ZoomableAsyncImage(
-                model = File(fotoPath),
-                contentDescription = "Foto de la muestra ampliada",
-                gestures = EnabledZoomGestures.ZoomAndPan,
-                modifier = Modifier.fillMaxSize()
-            )
-            IconButton(
-                onClick = onDismiss,
+        // Visor de la foto sobre negro.
+        SuperficieOscura {
+            Box(
                 modifier = Modifier
-                    .align(Alignment.TopEnd)
-                    .statusBarsPadding()
-                    .padding(8.dp)
+                    .fillMaxSize()
+                    .background(Color.Black)
             ) {
-                Icon(Icons.Filled.Close, contentDescription = "Cerrar", tint = Color.White)
+                ZoomableAsyncImage(
+                    model = File(fotoPath),
+                    contentDescription = "Foto de la muestra ampliada",
+                    gestures = EnabledZoomGestures.ZoomAndPan,
+                    modifier = Modifier.fillMaxSize()
+                )
+                IconButton(
+                    onClick = onDismiss,
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .statusBarsPadding()
+                        .padding(8.dp)
+                ) {
+                    Icon(Icons.Filled.Close, contentDescription = "Cerrar", tint = Color.White)
+                }
             }
         }
     }

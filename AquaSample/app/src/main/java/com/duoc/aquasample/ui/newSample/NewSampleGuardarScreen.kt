@@ -1,5 +1,6 @@
 package com.duoc.aquasample.ui.newSample
 
+import androidx.compose.foundation.layout.imePadding
 import com.duoc.aquasample.ui.components.SuperficieClara
 import com.duoc.aquasample.ui.theme.AldemarTexto
 import androidx.compose.foundation.background
@@ -91,6 +92,8 @@ fun NewSampleGuardarScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
+                // El teclado empuja el contenido hacia arriba en vez de taparlo.
+                .imePadding()
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 20.dp, vertical = 16.dp)
         ) {

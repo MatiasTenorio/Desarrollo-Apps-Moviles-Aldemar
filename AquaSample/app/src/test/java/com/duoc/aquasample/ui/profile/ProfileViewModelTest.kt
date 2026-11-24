@@ -111,4 +111,9 @@ class ProfileViewModelTest {
         assertEquals("Muestras tomadas hoy", ProfileUiState().etiquetaHoy)
         assertEquals("Muestras tomadas en total", ProfileUiState().etiquetaTotal)
     }
+
+    @Test
+    fun `etiqueta del rol administrador`() {
+        assertEquals("Administrador", Rol.ADMINISTRADOR.etiqueta())
+    }
 }

@@ -102,4 +102,12 @@ class HomeViewModelTest {
             HomeUiState(puedeRegistrar = false).subtituloHistorial
         )
     }
+
+    @Test
+    fun `el administrador ve la tarjeta de usuarios y no registra muestras`() {
+        val estado = Usuario("Jefa", "", Rol.ADMINISTRADOR, "jefa@test.cl").aHomeUiState()
+        assertTrue(estado.puedeAdministrarUsuarios)
+        assertFalse(estado.puedeRegistrar)
+        assertEquals("Revisa las muestras de todos los operadores", estado.subtituloHistorial)
+    }
 }

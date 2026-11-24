@@ -1,5 +1,6 @@
 package com.duoc.aquasample.ui.components
 
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
@@ -22,7 +23,8 @@ fun BottomNavBar(
                 selected = currentRoute == item.screen.route,
                 onClick = { onNavigate(item.screen.route) },
                 icon = { Icon(item.icon, contentDescription = item.label) },
-                label = { Text(item.label) },
+                // Centrado: "Nueva muestra" ocupa dos líneas y sin esto quedaba alineado a la izquierda.
+                label = { Text(item.label, textAlign = TextAlign.Center, maxLines = 2) },
                 colors = NavigationBarItemDefaults.colors(
                     selectedIconColor = AldemarPrincipal,
                     selectedTextColor = AldemarPrincipal,

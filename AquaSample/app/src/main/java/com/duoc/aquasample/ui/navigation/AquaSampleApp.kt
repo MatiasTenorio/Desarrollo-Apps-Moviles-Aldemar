@@ -1,5 +1,6 @@
 package com.duoc.aquasample.ui.navigation
 
+import com.duoc.aquasample.ui.admin.AdminUsuariosScreen
 import com.duoc.aquasample.ui.editarmuestra.EditarMuestraScreen
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.consumeWindowInsets
@@ -12,7 +13,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import com.duoc.aquasample.AquaSampleApplication
-import com.duoc.aquasample.data.model.Permisos
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -52,12 +52,10 @@ fun AquaSampleApp() {
     // de nueva muestra y el detalle quedan sin barra automáticamente.
     val showBottomBar = bottomNavItems.any { it.screen.route == currentRoute }
 
-    // El Analista no registra muestras: no ve la pestaña "Nueva muestra".
+    // Cada rol ve sus pestañas (Nueva muestra: Operador; Usuarios: Administrador).
     val sesion = (LocalContext.current.applicationContext as AquaSampleApplication).container.sesionRepository
     val usuario by sesion.usuario.collectAsState()
-    val pestanas = bottomNavItems.filter {
-        it.screen != Screen.NewSample || Permisos.puedeRegistrarMuestras(usuario?.rol)
-    }
+    val pestanas = pestanasPara(usuario?.rol)
 
     Scaffold(
         // Cada pantalla tiene su propio Scaffold/TopAppBar y maneja sus insets;
@@ -95,7 +93,8 @@ fun AquaSampleApp() {
                     onNavigateToNewSample = { navController.navigateToTab(Screen.NewSample.route) },
                     onNavigateToHistory = { navController.navigateToTab(Screen.History.route) },
                     onNavigateToProfile = { navController.navigateToTab(Screen.Profile.route) },
-                    onNavigateToDashboard = { navController.navigate(Screen.Dashboard.route) }
+                    onNavigateToDashboard = { navController.navigate(Screen.Dashboard.route) },
+                    onNavigateToUsuarios = { navController.navigateToTab(Screen.AdminUsuarios.route) }
                 )
             }
 
@@ -191,6 +190,10 @@ fun AquaSampleApp() {
                 )
             ) {
                 EditarMuestraScreen(onVolver = { navController.popBackStack() })
+            }
+
+            composable(Screen.AdminUsuarios.route) {
+                AdminUsuariosScreen(onBack = { navController.popBackStack() })
             }
 
             composable(Screen.Dashboard.route) {

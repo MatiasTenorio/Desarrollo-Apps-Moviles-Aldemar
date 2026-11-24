@@ -1,5 +1,6 @@
 package com.duoc.aquasample.ui.camera
 
+import com.duoc.aquasample.ui.components.SuperficieOscura
 import android.Manifest
 import android.content.pm.PackageManager
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -127,80 +128,83 @@ private fun VistaCamara(
         onDispose { controller.unbind() }
     }
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color.Black)
-    ) {
-        AndroidView(
-            factory = { ctx ->
-                PreviewView(ctx).apply {
-                    scaleType = PreviewView.ScaleType.FILL_CENTER
-                    this.controller = controller
-                }
-            },
-            modifier = Modifier.fillMaxSize()
-        )
-
-        IconButton(
-            onClick = onCancelar,
+    // Fondo negro de la cámara: texto e íconos siempre claros.
+    SuperficieOscura {
+        Box(
             modifier = Modifier
-                .statusBarsPadding()
-                .padding(8.dp)
-                .align(Alignment.TopStart)
+                .fillMaxSize()
+                .background(Color.Black)
         ) {
-            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver", tint = Color.White)
-        }
+            AndroidView(
+                factory = { ctx ->
+                    PreviewView(ctx).apply {
+                        scaleType = PreviewView.ScaleType.FILL_CENTER
+                        this.controller = controller
+                    }
+                },
+                modifier = Modifier.fillMaxSize()
+            )
 
-        Column(
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .navigationBarsPadding()
-                .padding(bottom = 32.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            error?.let {
-                Text(it, color = Color.White, textAlign = TextAlign.Center)
-                Spacer(Modifier.height(12.dp))
+            IconButton(
+                onClick = onCancelar,
+                modifier = Modifier
+                    .statusBarsPadding()
+                    .padding(8.dp)
+                    .align(Alignment.TopStart)
+            ) {
+                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver", tint = Color.White)
             }
 
-            // Botón disparador: círculo blanco con borde, como la cámara del sistema.
-            Box(
+            Column(
                 modifier = Modifier
-                    .size(76.dp)
-                    .border(4.dp, Color.White, CircleShape)
-                    .padding(8.dp)
-                    .background(if (capturando) Color.Gray else Color.White, CircleShape),
-                contentAlignment = Alignment.Center
+                    .align(Alignment.BottomCenter)
+                    .navigationBarsPadding()
+                    .padding(bottom = 32.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                if (capturando) {
-                    CircularProgressIndicator(color = AldemarPrincipal, modifier = Modifier.size(32.dp))
-                } else {
-                    IconButton(
-                        onClick = {
-                            capturando = true
-                            error = null
-                            val archivo = crearArchivo()
-                            controller.takePicture(
-                                ImageCapture.OutputFileOptions.Builder(archivo).build(),
-                                ContextCompat.getMainExecutor(context),
-                                object : ImageCapture.OnImageSavedCallback {
-                                    override fun onImageSaved(resultado: ImageCapture.OutputFileResults) {
-                                        capturando = false
-                                        onFotoTomada(archivo.absolutePath)
-                                    }
+                error?.let {
+                    Text(it, color = Color.White, textAlign = TextAlign.Center)
+                    Spacer(Modifier.height(12.dp))
+                }
 
-                                    override fun onError(excepcion: ImageCaptureException) {
-                                        archivo.delete()
-                                        capturando = false
-                                        error = "No se pudo tomar la foto. Intenta de nuevo."
+                // Botón disparador: círculo blanco con borde, como la cámara del sistema.
+                Box(
+                    modifier = Modifier
+                        .size(76.dp)
+                        .border(4.dp, Color.White, CircleShape)
+                        .padding(8.dp)
+                        .background(if (capturando) Color.Gray else Color.White, CircleShape),
+                    contentAlignment = Alignment.Center
+                ) {
+                    if (capturando) {
+                        CircularProgressIndicator(color = AldemarPrincipal, modifier = Modifier.size(32.dp))
+                    } else {
+                        IconButton(
+                            onClick = {
+                                capturando = true
+                                error = null
+                                val archivo = crearArchivo()
+                                controller.takePicture(
+                                    ImageCapture.OutputFileOptions.Builder(archivo).build(),
+                                    ContextCompat.getMainExecutor(context),
+                                    object : ImageCapture.OnImageSavedCallback {
+                                        override fun onImageSaved(resultado: ImageCapture.OutputFileResults) {
+                                            capturando = false
+                                            onFotoTomada(archivo.absolutePath)
+                                        }
+
+                                        override fun onError(excepcion: ImageCaptureException) {
+                                            archivo.delete()
+                                            capturando = false
+                                            error = "No se pudo tomar la foto. Intenta de nuevo."
+                                        }
                                     }
-                                }
-                            )
-                        },
-                        modifier = Modifier.size(60.dp)
-                    ) {
-                        Icon(Icons.Filled.CameraAlt, contentDescription = "Tomar foto", tint = AldemarPrincipal)
+                                )
+                            },
+                            modifier = Modifier.size(60.dp)
+                        ) {
+                            Icon(Icons.Filled.CameraAlt, contentDescription = "Tomar foto", tint = AldemarPrincipal)
+                        }
                     }
                 }
             }

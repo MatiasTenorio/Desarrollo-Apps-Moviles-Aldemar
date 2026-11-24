@@ -219,7 +219,8 @@ private fun DatoResumen(valor: String, etiqueta: String) {
 @Composable
 fun FiltrosRapidos(
     filtro: FiltroHistorial,
-    esAnalista: Boolean,
+    mostrarOperador: Boolean,
+    mostrarEstado: Boolean,
     operadores: List<String>,
     onCambiar: (FiltroHistorial) -> Unit,
     modifier: Modifier = Modifier
@@ -246,14 +247,15 @@ fun FiltrosRapidos(
             opciones = Catalogos.lineas.map { "Línea $it" },
             onElegir = { elegido -> onCambiar(filtro.copy(linea = elegido?.removePrefix("Línea ")?.toIntOrNull())) }
         )
-        if (esAnalista) {
+        if (mostrarOperador) {
             ChipMenu(
                 titulo = "Operador",
                 valor = filtro.operador,
                 opciones = operadores,
                 onElegir = { onCambiar(filtro.copy(operador = it)) }
             )
-        } else {
+        }
+        if (mostrarEstado) {
             ChipMenu(
                 titulo = "Estado",
                 valor = filtro.estado?.etiqueta,

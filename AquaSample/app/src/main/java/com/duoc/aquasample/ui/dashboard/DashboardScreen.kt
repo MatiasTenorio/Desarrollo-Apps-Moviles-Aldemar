@@ -1,8 +1,9 @@
 package com.duoc.aquasample.ui.dashboard
 
+import com.duoc.aquasample.ui.components.compartirPdf
+import com.duoc.aquasample.ui.components.Tinta
 import com.duoc.aquasample.ui.components.SuperficieClara
 import com.duoc.aquasample.ui.theme.AldemarTexto
-import android.content.Intent
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -42,7 +43,6 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.core.content.FileProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.duoc.aquasample.ui.components.StatCard
 import com.duoc.aquasample.ui.theme.AldemarPrincipal
@@ -63,13 +63,7 @@ fun DashboardScreen(
     // (correo, WhatsApp, Drive...). El FileProvider da permiso de lectura temporal.
     LaunchedEffect(reporte.archivo) {
         val archivo = reporte.archivo ?: return@LaunchedEffect
-        val uri = FileProvider.getUriForFile(contexto, "${contexto.packageName}.fileprovider", archivo)
-        val enviar = Intent(Intent.ACTION_SEND).apply {
-            type = "application/pdf"
-            putExtra(Intent.EXTRA_STREAM, uri)
-            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-        }
-        contexto.startActivity(Intent.createChooser(enviar, "Compartir reporte"))
+        compartirPdf(contexto, archivo)
         viewModel.onReporteCompartido()
     }
 
@@ -134,7 +128,7 @@ fun DashboardContent(
             if (datos.totalMuestras == 0) {
                 Text(
                     "Aún no hay muestras. Los gráficos aparecen al registrar la primera.",
-                    color = Color.Gray
+                    color = Tinta.secundaria
                 )
             } else {
                 TarjetaGrafico {
@@ -151,7 +145,7 @@ fun DashboardContent(
             Text("Reporte", fontWeight = FontWeight.Bold, fontSize = 16.sp)
             Text(
                 "PDF con las muestras validadas: identificación, conteo, observaciones y fecha.",
-                color = Color.Gray,
+                color = Tinta.secundaria,
                 fontSize = 13.sp
             )
             Button(

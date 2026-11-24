@@ -1,5 +1,6 @@
 package com.duoc.aquasample.ui.profile
 
+import com.duoc.aquasample.ui.components.Tinta
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
@@ -142,7 +143,7 @@ fun ProfileScreen(
             Text(
                 text = uiState.rol,
                 style = MaterialTheme.typography.bodyMedium,
-                color = Color.Gray
+                color = Tinta.secundaria
             )
 
             Spacer(modifier = Modifier.height(32.dp))

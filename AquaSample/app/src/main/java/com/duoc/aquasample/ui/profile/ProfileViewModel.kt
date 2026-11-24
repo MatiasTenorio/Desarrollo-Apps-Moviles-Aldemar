@@ -1,5 +1,6 @@
 package com.duoc.aquasample.ui.profile
 
+import com.duoc.aquasample.data.model.Permisos
 import com.duoc.aquasample.data.model.EstadoRevision
 import android.content.Context
 import android.graphics.BitmapFactory
@@ -44,6 +45,7 @@ data class ProfileUiState(
 internal fun Rol.etiqueta(): String = when (this) {
     Rol.OPERADOR -> "Operador"
     Rol.ANALISTA -> "Analista de reportes"
+    Rol.ADMINISTRADOR -> "Administrador"
 }
 
 /** Cuenta solo las muestras del operador: (tomadas hoy, tomadas en total). */
@@ -82,7 +84,8 @@ class ProfileViewModel(
             combine(sesion.usuario, repository.observarMuestras()) { usuario, muestras ->
                 usuario to muestras
             }.collect { (usuario, muestras) ->
-                val esAnalista = usuario?.rol == Rol.ANALISTA
+                // Analista y Administrador no toman muestras: ven lo validado de todos.
+                val esAnalista = Permisos.veTodosLosOperadores(usuario?.rol)
                 val (deHoy, total) =
                     if (esAnalista) contarParaAnalista(muestras)
                     else contarMuestrasDe(usuario?.correo, muestras, hoy())

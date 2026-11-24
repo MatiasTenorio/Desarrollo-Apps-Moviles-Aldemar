@@ -1,5 +1,7 @@
 package com.duoc.aquasample.ui.newSample
 
+import com.duoc.aquasample.ui.components.Tinta
+import androidx.compose.foundation.layout.imePadding
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
@@ -99,6 +101,8 @@ fun NewSampleLineaFotosScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
+                // El teclado empuja el contenido hacia arriba en vez de taparlo.
+                .imePadding()
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 20.dp, vertical = 16.dp)
         ) {
@@ -226,15 +230,15 @@ private fun FotoMuestraBox(
                 Icon(
                     imageVector = Icons.Filled.Image,
                     contentDescription = null,
-                    tint = Color.Gray,
+                    tint = Tinta.secundaria,
                     modifier = Modifier.size(40.dp)
                 )
                 Spacer(modifier = Modifier.height(8.dp))
-                Text("Selecciona o toma una foto", color = Color.DarkGray)
+                Text("Selecciona o toma una foto", color = Tinta.principal)
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
                     "Solo se permite una foto por muestra. Toca para capturarla.",
-                    color = Color.Gray,
+                    color = Tinta.secundaria,
                     style = MaterialTheme.typography.bodySmall,
                     modifier = Modifier.padding(horizontal = 24.dp)
                 )

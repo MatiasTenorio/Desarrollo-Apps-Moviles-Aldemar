@@ -1,5 +1,6 @@
 package com.duoc.aquasample.ui.newSample
 
+import androidx.compose.foundation.layout.imePadding
 import com.duoc.aquasample.ui.components.SuperficieClara
 import com.duoc.aquasample.ui.theme.AldemarTexto
 import androidx.compose.foundation.Canvas
@@ -103,6 +104,8 @@ fun NewSampleConteoScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
+                // El teclado empuja el contenido hacia arriba en vez de taparlo.
+                .imePadding()
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 20.dp, vertical = 16.dp)
         ) {
@@ -121,6 +124,8 @@ fun NewSampleConteoScreen(
                 FotoConMarcas(
                     fotoPath = fotoPath,
                     marcas = uiState.marcas,
+                    // El que se está midiendo en "Tamaño por chorito" se resalta en la foto.
+                    seleccionada = uiState.indiceMedicion.takeIf { it in uiState.marcas.indices },
                     onTocar = viewModel::onTocarFoto
                 )
             }
@@ -196,11 +201,13 @@ fun NewSampleConteoScreen(
 private fun FotoConMarcas(
     fotoPath: String,
     marcas: List<MarcaChorito>,
+    seleccionada: Int?,
     onTocar: (x: Float, y: Float, ancho: Float, alto: Float, radio: Float) -> Unit
 ) {
     var proporcion by remember(fotoPath) { mutableStateOf<Float?>(null) }
     val medidorTexto = rememberTextMeasurer()
     val estiloNumero = TextStyle(color = Color.White, fontSize = 10.sp, fontWeight = FontWeight.Bold)
+    val estiloSeleccionado = estiloNumero.copy(color = AldemarPrincipal)
 
     Box(
         modifier = Modifier
@@ -234,11 +241,25 @@ private fun FotoConMarcas(
         )
 
         Canvas(modifier = Modifier.fillMaxSize()) {
-            marcas.forEachIndexed { indice, marca ->
+            // La seleccionada se dibuja al final para que quede encima de las vecinas.
+            val orden = marcas.indices.sortedBy { it == seleccionada }
+            orden.forEach { indice ->
+                val marca = marcas[indice]
                 val centro = Offset(marca.posX * size.width, marca.posY * size.height)
-                drawCircle(color = Color.White, radius = RADIO_MARCA.toPx(), center = centro)
-                drawCircle(color = AldemarAdicional, radius = RADIO_MARCA.toPx() - 2.dp.toPx(), center = centro)
-                val numero = medidorTexto.measure((indice + 1).toString(), estiloNumero)
+                val resaltada = indice == seleccionada
+                if (resaltada) {
+                    // Resaltado: fondo blanco con número y borde azul, un poco más grande.
+                    val radio = RADIO_MARCA.toPx() + 3.dp.toPx()
+                    drawCircle(color = AldemarPrincipal, radius = radio, center = centro)
+                    drawCircle(color = Color.White, radius = radio - 2.5.dp.toPx(), center = centro)
+                } else {
+                    drawCircle(color = Color.White, radius = RADIO_MARCA.toPx(), center = centro)
+                    drawCircle(color = AldemarAdicional, radius = RADIO_MARCA.toPx() - 2.dp.toPx(), center = centro)
+                }
+                val numero = medidorTexto.measure(
+                    (indice + 1).toString(),
+                    if (resaltada) estiloSeleccionado else estiloNumero
+                )
                 drawText(
                     textLayoutResult = numero,
                     topLeft = Offset(
