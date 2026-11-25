@@ -1,95 +1,142 @@
-# AquaSample · ALDEMAR SpA
+# AquaSample - ALDEMAR SpA
 
-App Android para el **registro, conteo y trazabilidad de muestras de choritos** en centros de cultivo, con backend propio y funcionamiento offline.
-Proyecto del ramo DSY1105 – Desarrollo de Aplicaciones Móviles (DuocUC). Todos los datos y fotos son ficticios.
+App Android para registrar, contar y revisar muestras de choritos en centros de cultivo. Funciona sin conexión y se sincroniza con un backend propio.
+
+Proyecto del ramo DSY1105 - Desarrollo de Aplicaciones Móviles (DuocUC), Equipo 12. Los datos y fotos son ficticios.
+
+## Estructura
+
+```
+AquaSample/       App Android (Kotlin, Jetpack Compose, Material 3, MVVM)
+aquasample-api/   Backend (Spring Boot 4, Java 21, MySQL, Flyway, Swagger)
+docs/             Evidencias de clase y guía de defensa
+```
+
+## Roles
+
+| Rol | Qué hace |
+|---|---|
+| Operador | Registra muestras (foto, conteo, observaciones), las edita mientras no estén validadas y cambia su estado (Pendiente, Observado, Validado). |
+| Analista | Consulta las muestras validadas de todos los operadores, las filtra por centro, tren, línea y operador, y exporta reportes PDF. No toma ni modifica muestras. |
+| Administrador | Da de alta usuarios (en Insforge y en el backend), les asigna nombre y rol, los da de baja y puede eliminar muestras. Consulta el historial completo y exporta reportes. |
+
+El rol se guarda en MySQL. Un usuario nuevo entra como Operador. El primer Administrador se define con `ADMIN_CORREO` en el `.env` del backend; los demás roles se asignan desde la pantalla Usuarios.
 
 ## Funcionalidades
 
-| | |
+- **Nueva muestra:** asistente de 3 pasos. Primero centro, tren, línea, longitud del tramo y foto (cámara o galería); luego el conteo tocando cada chorito sobre la foto, con tamaño opcional; al final, observaciones y guardado.
+- **Historial:** búsqueda, filtros y resumen. Exporta a PDF lo que se está viendo.
+- **Detalle:** foto con zoom, choritos medidos, cambio de estado, edición y eliminación, según el rol.
+- **Dashboard:** indicadores y gráficos de choritos por día, muestras por estado y promedio por línea.
+- **Condiciones del mar:** oleaje y temperatura del mar del centro elegido (Open-Meteo Marine).
+- **Offline:** todo se guarda en el teléfono (Room). WorkManager sube y baja muestras y fotos cuando hay red.
+
+## APIs
+
+### Backend propio (`aquasample-api`, puerto 8080)
+
+Swagger: `http://localhost:8080/swagger-ui.html`
+
+| Método | Ruta | Uso |
+|---|---|---|
+| GET | `/api/muestras` | Listar (filtros opcionales: centro, tren, línea, período) |
+| GET | `/api/muestras/{id}` | Una muestra |
+| POST | `/api/muestras` | Crear o actualizar por `uuid` (201 o 200). Lo usa la sincronización |
+| PUT | `/api/muestras/{id}` | Actualizar por id |
+| PATCH | `/api/muestras/{id}/estado` | Cambiar estado de revisión |
+| DELETE | `/api/muestras/{id}` | Eliminar muestra, choritos y foto |
+| PUT | `/api/muestras/{uuid}/foto` | Subir la foto (multipart, campo `foto`, máximo 10 MB) |
+| GET | `/api/muestras/{uuid}/foto` | Descargar la foto |
+| POST | `/api/usuarios` | Registrar el acceso tras el login; devuelve nombre y rol |
+| GET | `/api/usuarios` | Listar usuarios (antes se sincroniza con Insforge) |
+| POST | `/api/usuarios/validar-correo` | Revisar que el dominio del correo exista y reciba correos |
+| POST | `/api/usuarios/alta` | Alta desde la pantalla del Administrador |
+| PATCH | `/api/usuarios/{id}` | Cambiar nombre y rol |
+| PATCH | `/api/usuarios/{id}/rol` | Cambiar solo el rol |
+| DELETE | `/api/usuarios/{id}` | Dar de baja (Insforge y MySQL) |
+
+Los errores responden con texto plano en español: 400 (datos inválidos), 404 (no existe), 413 (foto muy grande), 502 (Insforge no respondió).
+
+### Externas
+
+- **Insforge:** autenticación. La app usa la anon key para iniciar sesión y crear cuentas. El backend usa la API key de administrador, solo desde su `.env`, para listar y eliminar cuentas.
+- **Open-Meteo Marine:** `GET https://marine-api.open-meteo.com/v1/marine`, sin API key. Si falla la red o el servidor, la app muestra un mensaje y permite reintentar.
+
+## Entidades
+
+### Backend (MySQL)
+
+| Tabla | Campos principales |
 |---|---|
-| **Login** | Con **Insforge** (correo y contraseña). Al entrar, el backend registra al usuario en MySQL con su rol (Operador o Analista) |
-| **Nueva muestra** | Asistente de 3 pasos: centro, tren, línea, longitud del tramo y foto (CameraX o galería) → **conteo asistido** tocando cada chorito sobre la foto, con corrección manual y tamaño opcional → resumen, observaciones y guardado |
-| **Historial** | Filtros por centro, tren, línea y período, búsqueda y resumen para comparar |
-| **Detalle** | Todos los datos, foto con zoom (Telephoto) y **cambio de estado de revisión** (Pendiente → Observado → Validado) |
-| **Dashboard** | Indicadores y gráficos: choritos por día, muestras por estado y promedio por línea |
-| **Reporte PDF** | Exporta y comparte las muestras validadas (identificación, conteo, observaciones y fecha) |
-| **Condiciones del mar** | Oleaje, temperatura del mar y corriente de referencia por centro (API externa Open-Meteo Marine) |
-| **Offline** | Todo se guarda en Room; WorkManager sube las muestras pendientes al backend cuando hay red |
+| `muestra` | id, uuid (único), centro, tren, linea, longitud_tramo_m, fecha_hora, operador (correo), observaciones, estado, foto_nombre |
+| `chorito` | id, muestra_id, numero, pos_x, pos_y, tamano_cm |
+| `foto_muestra` | uuid (de la muestra), contenido (imagen), tipo_contenido, tamano_bytes |
+| `usuario` | id, correo (único), nombre, rol, ultimo_acceso |
 
-## Arquitectura
+`chorito` y `foto_muestra` se borran junto con su muestra. Las migraciones están en `aquasample-api/src/main/resources/db/migration` (V1 a V4).
+
+### App (Room y modelos)
+
+- **Muestra:** los mismos datos que en el backend, más `fotoPath` (ruta local de la foto), `estadoSync` (Pendiente, Sincronizado o Error) y `remoteId` (id en el backend).
+- **Chorito:** número, posición relativa en la foto (0 a 1) y tamaño en cm (opcional).
+- **Usuario:** nombre, correo y rol de la sesión actual.
+
+Cada muestra tiene un `uuid` generado en el teléfono. El backend crea o actualiza por `uuid`, así un reenvío nunca duplica. Las muestras guardan el correo del operador, no su nombre: el nombre se busca al mostrarlas, porque puede cambiar.
+
+## Configuración
+
+**Backend:** archivo `aquasample-api/.env` (no se sube a git):
 
 ```
-Desarrollo-Apps-Moviles-Aldemar/
-├── AquaSample/       App Android (Kotlin, Jetpack Compose, Material 3, MVVM)
-├── aquasample-api/   Backend Spring Boot (CRUD, MySQL, Flyway, Swagger)
-└── docs/             Evidencias de clases
+DB_USER=root
+DB_PASSWORD=
+ADMIN_CORREO=correo del primer administrador
+INSFORGE_URL=https://tu-proyecto.us-east.insforge.app
+INSFORGE_API_KEY=api key de administrador de Insforge
 ```
 
-- **App:** MVVM con `StateFlow`; Room (persistencia), Retrofit (backend y Open-Meteo), WorkManager (sincronización), CameraX + Coil + Telephoto (fotos), Navigation Compose. Inyección de dependencias manual en `AppContainer`.
-- **Backend:** Spring Boot 4.1 · Java 21 · MySQL · Flyway · springdoc-openapi (Swagger). Endpoints en `/api/muestras` (detalle en `aquasample-api/README.md`).
-- **Sincronización:** cada muestra tiene un `uuid` generado en el teléfono; el backend crea o actualiza por `uuid`, así un reenvío nunca duplica.
+**App:** archivo `AquaSample/local.properties` (no se sube a git):
 
-## Cómo ejecutar
-
-Requisitos: Android Studio, Java 21 (sirve el de Android Studio) y Laragon con MySQL 8.
-
-**1. Backend**
-```
-cd aquasample-api
-Set-Content .env "DB_USER=root`nDB_PASSWORD="
-.\mvnw.cmd spring-boot:run
-```
-Flyway crea la base `aquasample` y sus tablas. Swagger: http://localhost:8080/swagger-ui.html
-
-**2. App**
-Agregar a `AquaSample/local.properties` (no se sube a git) los datos del proyecto Insforge. Se usa la **anon key** (dashboard de Insforge → *Install* → *API Keys*), nunca la API key `ik_...` de administrador:
 ```
 insforge.baseUrl=https://tu-proyecto.us-east.insforge.app/
-insforge.anonKey=pegar_aqui_la_anon_key
-```
-Abrir `AquaSample` en Android Studio y ejecutar en un emulador (usa `http://10.0.2.2:8080/` para llegar al backend del PC).
-En un teléfono real, agregar también la IP del PC:
-```
-api.baseUrl=http://192.168.1.50:8080/
+insforge.anonKey=anon key de Insforge
+api.baseUrl=http://localhost:8080/
 ```
 
-**3. Usuarios y roles**
-Los usuarios se crean en el dashboard de Insforge. El primer inicio de sesión los registra en la tabla `usuario` de MySQL como Operador. Para hacer Analista a alguien, en HeidiSQL (Laragon):
-```sql
-UPDATE usuario SET rol = 'ANALISTA' WHERE correo = 'correo@ejemplo.cl';
-```
+`api.baseUrl` queda grabado en la APK al compilar:
+- Emulador: `http://10.0.2.2:8080/` (el valor por defecto).
+- Teléfono por USB: `http://localhost:8080/`, y ejecutar `adb reverse tcp:8080 tcp:8080`.
+- Teléfono por Wi-Fi: la IP del PC, en la misma red y con el puerto 8080 abierto en el firewall.
 
-## Pruebas y cobertura
+## Ejecutar
 
-| | Comando (PowerShell) | Resultado |
+1. Encender MySQL (Laragon).
+2. Backend: en `aquasample-api`, ejecutar `.\mvnw.cmd spring-boot:run`. Flyway crea la base `aquasample` y sus tablas.
+3. App: abrir `AquaSample` en Android Studio y ejecutar.
+
+## Pruebas
+
+| Qué | Comando | Reporte |
 |---|---|---|
 | App, unitarias (JUnit + MockK) | `.\gradlew.bat testDebugUnitTest` | `app/build/reports/tests/` |
 | App, cobertura (Kover, mínimo 90%) | `.\gradlew.bat koverHtmlReportDebug koverVerifyDebug` | `app/build/reports/kover/htmlDebug/index.html` |
-| App, interfaz (Compose UI Test, con emulador abierto) | `.\gradlew.bat connectedDebugAndroidTest` | `app/build/reports/androidTests/` |
-| Backend (JUnit + Mockito + MockMvc, JaCoCo mínimo 90%) | `.\mvnw.cmd verify` | `aquasample-api/target/site/jacoco/index.html` |
+| App, interfaz (Compose UI Test, con teléfono o emulador) | `.\gradlew.bat connectedDebugAndroidTest` | `app/build/reports/androidTests/` |
+| Backend (JUnit + Mockito + MockMvc, JaCoCo mínimo 90%) | `.\mvnw.cmd verify` | `target/site/jacoco/index.html` |
 
-Los comandos de la app se ejecutan desde `AquaSample/` y los del backend desde `aquasample-api/`.
+## APK firmada
 
-## APK firmado
+1. Crear el keystore desde Android Studio (Build > Generate Signed App Bundle or APK > Create new).
+2. Crear `AquaSample/keystore.properties` (no se sube a git) con `storeFile`, `storePassword`, `keyAlias` y `keyPassword`.
+3. Ejecutar `.\gradlew.bat assembleRelease`. El resultado queda en `app/build/outputs/apk/release/app-release.apk`.
 
-1. Crear el keystore **fuera del repositorio** (Android Studio → *Build → Generate Signed App Bundle or APK → Create new*), por ejemplo en `C:\Users\Usuario\keystores\aquasample.jks`.
-2. Crear `AquaSample/keystore.properties` (está en `.gitignore`, nunca se sube):
-   ```
-   storeFile=C:/Users/Usuario/keystores/aquasample.jks
-   storePassword=tu_clave
-   keyAlias=aquasample
-   keyPassword=tu_clave
-   ```
-3. Generar: `.\gradlew.bat assembleRelease` → `AquaSample/app/build/outputs/apk/release/app-release.apk`
+Versión actual: `versionCode 1`, `versionName 1.0.0`, en `AquaSample/app/build.gradle.kts`.
 
 ## Seguridad
 
-No hay credenciales en el repositorio: `.env` (backend), `local.properties` y `keystore.properties` (app) están en `.gitignore`. La app solo lleva la anon key pública de Insforge; las contraseñas viven en Insforge, nunca en MySQL. Open-Meteo Marine no requiere API key.
+- **Credenciales:** `.env`, `local.properties`, `keystore.properties` y los `.jks` están en `.gitignore`.
+- **Insforge:** la app solo lleva la anon key; la API key de administrador queda únicamente en el backend. Las contraseñas viven en Insforge, nunca en MySQL.
+- **Pendiente:** los endpoints del backend no exigen autenticación. Los permisos por rol se controlan en la app.
 
 ## Defensa
 
-Guía de demostración (roles, Swagger → app, offline, pruebas) y ensayo del cambio en vivo: [`docs/guia-defensa.md`](docs/guia-defensa.md).
-
-## Equipo y planificación
-
-Equipo 12 · DuocUC. Planificación en Trello: *(agregar enlace al tablero)*.
+Guía de demostración: [`docs/guia-defensa.md`](docs/guia-defensa.md).
