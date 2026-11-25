@@ -90,15 +90,16 @@ Cada muestra tiene un `uuid` generado en el teléfono. El backend crea o actuali
 ```
 DB_USER=root
 DB_PASSWORD=
-ADMIN_CORREO=correo del primer administrador
-INSFORGE_URL=https://tu-proyecto.us-east.insforge.app
-INSFORGE_API_KEY=api key de administrador de Insforge
+ADMIN_CORREO=mtvj2701@gmail.com
+ADMIN_PASS= 123456
+INSFORGE_URL=https://insforge.dev/dashboard/project/424bb903-97ba-4888-8f67-d0a2ed476471
+INSFORGE_API_KEY=key de administrador de Insforge
 ```
 
 **App:** archivo `AquaSample/local.properties` (no se sube a git):
 
 ```
-insforge.baseUrl=https://tu-proyecto.us-east.insforge.app/
+insforge.baseUrl=https://insforge.dev/dashboard/project/424bb903-97ba-4888-8f67-d0a2ed476471
 insforge.anonKey=anon key de Insforge
 api.baseUrl=http://localhost:8080/
 ```
