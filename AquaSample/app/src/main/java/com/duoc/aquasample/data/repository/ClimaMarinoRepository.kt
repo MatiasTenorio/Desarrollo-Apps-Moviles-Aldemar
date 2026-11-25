@@ -7,10 +7,8 @@ import com.duoc.aquasample.data.remote.OpenMeteoApi
 import java.io.IOException
 import retrofit2.HttpException
 
-/** Condiciones del mar de referencia para un centro de cultivo. */
 data class CondicionesMarinas(
     val centro: String,
-    /** Hora de la medición, como la entrega la API ("2026-11-24T09:15"). */
     val hora: String?,
     val alturaOlaM: Double?,
     val periodoOlaS: Double?,
@@ -21,7 +19,6 @@ data class CondicionesMarinas(
         get() = alturaOlaM == null && periodoOlaS == null && temperaturaMarC == null && corrienteKmh == null
 }
 
-/** Una sola operación, así las pruebas y la vista previa pueden pasar una lambda. */
 fun interface ClimaMarinoRepository {
     suspend fun obtener(centro: String): Result<CondicionesMarinas>
 }

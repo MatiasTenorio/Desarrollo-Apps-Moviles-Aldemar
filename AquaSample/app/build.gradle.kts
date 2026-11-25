@@ -13,13 +13,10 @@ val propiedadesLocales = Properties().apply {
 }
 val apiBaseUrl: String = propiedadesLocales.getProperty("api.baseUrl") ?: "http://10.0.2.2:8080/"
 
-// Login con Insforge. Usar la ANON key (pública), nunca la API key de administrador.
 val insforgeBaseUrl: String = propiedadesLocales.getProperty("insforge.baseUrl") ?: ""
 val insforgeAnonKey: String = propiedadesLocales.getProperty("insforge.anonKey") ?: ""
 
-// Firma del APK release. Los datos del keystore van en AquaSample/keystore.properties,
-// que NO se sube a git (la pauta prohíbe publicar llaves de firma). Si el archivo no
-// existe, el APK release se genera sin firmar.
+
 val propiedadesFirma = Properties().apply {
     val archivo = rootProject.file("keystore.properties")
     if (archivo.exists()) archivo.inputStream().use { load(it) }
@@ -40,9 +37,7 @@ android {
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
-        // URL del backend. Por defecto 10.0.2.2 = "el computador" visto desde el
-        // emulador. Para un teléfono real, agrega en local.properties (no se sube
-        // a git) la IP del computador, por ejemplo: api.baseUrl=http://192.168.1.50:8080/
+
         buildConfigField("String", "API_BASE_URL", "\"$apiBaseUrl\"")
         buildConfigField("String", "INSFORGE_BASE_URL", "\"$insforgeBaseUrl\"")
         buildConfigField("String", "INSFORGE_ANON_KEY", "\"$insforgeAnonKey\"")

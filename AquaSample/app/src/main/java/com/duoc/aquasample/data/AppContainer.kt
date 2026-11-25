@@ -31,12 +31,7 @@ import com.duoc.aquasample.data.repository.MuestraRepository
 import com.duoc.aquasample.data.repository.MuestraRepositoryImpl
 import com.duoc.aquasample.data.repository.SesionRepository
 
-/**
- * Inyección de dependencias manual: crea una sola base de datos y un solo
- * repositorio para toda la app. Los ViewModels lo reciben por su Factory
- * (ver HistoryViewModel.Factory). No usamos Hilt para no sumar otra
- * herramienta con el plazo que tenemos.
- */
+
 class AppContainer(context: Context) {
 
     private val database: AquaSampleDatabase = Room.databaseBuilder(
@@ -44,9 +39,6 @@ class AppContainer(context: Context) {
         AquaSampleDatabase::class.java,
         AquaSampleDatabase.NOMBRE
     )
-        // Mientras la app está en desarrollo, un cambio de versión de la base
-        // borra y recrea las tablas en vez de exigir una migración. Antes de
-        // publicar una versión real hay que reemplazar esto por Migrations.
         .fallbackToDestructiveMigration(dropAllTables = true)
         .build()
 
@@ -70,8 +62,6 @@ class AppContainer(context: Context) {
     val sincronizador: SincronizadorMuestras by lazy {
         SincronizadorMuestras(muestraRepository, api, AlmacenFotosAndroid(context))
     }
-
-    /** API externa Open-Meteo Marine: otro servidor, por eso su propio Retrofit. */
     val climaMarinoRepository: ClimaMarinoRepository by lazy {
         val openMeteo = Retrofit.Builder()
             .baseUrl(OpenMeteoApi.URL_BASE)
@@ -85,14 +75,9 @@ class AppContainer(context: Context) {
 
     val sesionRepository: SesionRepository = SesionRepository()
 
-    /**
-     * Login con Insforge. La URL y la anon key se leen de local.properties
-     * (insforge.baseUrl / insforge.anonKey), que no se sube a git.
-     */
+
     private val insforgeConfigurado: Boolean =
         BuildConfig.INSFORGE_BASE_URL.isNotBlank() && BuildConfig.INSFORGE_ANON_KEY.isNotBlank()
-
-    // Un solo cliente de Insforge para el login y para el alta de usuarios.
     private val insforge by lazy {
         if (insforgeConfigurado) {
             createInsforgeClient(BuildConfig.INSFORGE_BASE_URL, BuildConfig.INSFORGE_ANON_KEY) {
@@ -111,13 +96,10 @@ class AppContainer(context: Context) {
         )
     }
 
-    /** Eliminar muestras (Administrador): backend, teléfono y foto. */
     val eliminadorMuestras: EliminadorMuestras by lazy { EliminadorMuestras(muestraRepository, api, fotoRepository) }
 
-    /** Correo del operador → nombre visible (Detalle de muestra). */
     val directorioUsuarios: DirectorioUsuarios by lazy { DirectorioUsuariosRemoto(api, sesionRepository) }
 
-    /** Pantalla del Administrador: la cuenta se crea en Insforge y el nombre y rol en el backend. */
     val usuariosRepository: UsuariosRepository by lazy {
         UsuariosRepositoryImpl(
             api = api,

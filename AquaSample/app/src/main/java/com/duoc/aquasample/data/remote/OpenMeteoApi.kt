@@ -4,13 +4,7 @@ import com.google.gson.annotations.SerializedName
 import retrofit2.http.GET
 import retrofit2.http.Query
 
-/**
- * API externa Open-Meteo Marine (https://open-meteo.com). Es gratuita y no
- * necesita cuenta ni API key, así que no hay ningún secreto que proteger.
- * Entrega condiciones del mar de referencia: oleaje, temperatura y corriente.
- */
 interface OpenMeteoApi {
-
     @GET("v1/marine")
     suspend fun condicionesActuales(
         @Query("latitude") latitud: Double,
@@ -27,7 +21,6 @@ interface OpenMeteoApi {
     }
 }
 
-/** Respuesta de Open-Meteo. Todos los campos son opcionales: el modelo puede no tener datos para un punto. */
 data class RespuestaOpenMeteo(
     val current: ActualOpenMeteo?
 )

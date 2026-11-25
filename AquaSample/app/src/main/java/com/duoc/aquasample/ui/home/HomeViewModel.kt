@@ -21,12 +21,9 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-/** Estado de la pantalla Home: nombre para el saludo ("Hola, operador1"). */
 data class HomeUiState(
     val userName: String = "Usuario",
-    /** false para el Analista: no ve la opción "Nueva muestra". */
     val puedeRegistrar: Boolean = false,
-    /** true para el Administrador: ve la tarjeta "Usuarios". */
     val puedeAdministrarUsuarios: Boolean = false
 ) {
     val subtituloHistorial: String
@@ -43,7 +40,6 @@ internal fun Usuario?.aHomeUiState(): HomeUiState = HomeUiState(
     puedeAdministrarUsuarios = Permisos.puedeAdministrarUsuarios(this?.rol)
 )
 
-/** Tarjeta "Condiciones del mar" (Open-Meteo Marine). */
 sealed interface ClimaUiState {
     data object Cargando : ClimaUiState
     data class Listo(val condiciones: CondicionesMarinas) : ClimaUiState

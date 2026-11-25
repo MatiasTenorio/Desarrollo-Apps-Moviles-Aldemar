@@ -113,7 +113,7 @@ class UsuarioServiceTest {
         when(usuarioRepository.findByCorreo(any())).thenReturn(Optional.empty());
         saveDevuelveLaEntidad();
 
-        UsuarioResponse usuario = new UsuarioService(usuarioRepository).registrarAcceso("x@test.cl");
+        UsuarioResponse usuario = new UsuarioService(usuarioRepository, insforge, verificadorDominio).registrarAcceso("x@test.cl");
 
         assertThat(usuario.getUltimoAcceso()).isNotNull();
     }
